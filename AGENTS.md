@@ -1,50 +1,28 @@
-# DOX framework - LRP
+# LRP Agents Agreement
 
-- DOX is a highly performant AGENTS.md hierarchy installed here.
-- Agent must follow DOX instructions across any edits.
+This document binds all autonomous AI coding agents and human developers working in the LRP repository.
 
-## Core Contract
+## Core Rules & Contracts
 
-- AGENTS.md files are binding work contracts for their subtrees.
-- Work products, source materials, instructions, records, assets, and durable docs must stay understandable from the nearest applicable AGENTS.md plus every parent AGENTS.md above it.
+1.  **AI-native Enterprise OS Vision:**
+    LRP is not a modular ERP. It is a Knowledge Graph Operating System. Every feature, database query, or API design must treat everything as an Entity or an Event.
+2.  **No Direct UPDATE or DELETE (Event Sourcing):**
+    Never write code that directly updates or deletes entity data fields in production tables (except metadata / versioning control tables). Changes must be modeled as append-only `EVENT` records. Dynamic current states must be computed via **Projections**.
+3.  **Strict CQRS Isolation:**
+    Never run complex analytical or reporting queries directly against the `OBJECT` or `RELATIONSHIP` write tables. All reporting must use the materialized read models (Read Views), accepting a maximum latency of 5 seconds.
+4.  **Database Level Security (RLS):**
+    All Ecto queries must carry and enforce the `tenant_id` context. When working with PostgreSQL, Row-Level Security (RLS) policies must be respected and active.
+5.  **JSON Patch (RFC 6902) Versioning:**
+    Version control for objects must store deltas/diffs using JSON Patch arrays. Compaction (squashing into a full snapshot) must be triggered automatically every **50 patches**.
+6.  **ReBAC (Relation-based Access Control):**
+    Authorization checks must be resolved dynamically by traversing the relations in the `RELATIONSHIP` graph, aligned with OpenFGA patterns.
 
-## Read Before Editing
+## Codebase Organization (DDD)
 
-1. Read the root [AGENTS.md](file:///B:/DEV/HAREZM_EKOSISTEMI/AGENTS.md)
-2. Identify every file or folder you expect to touch
-3. Walk from the repository root to each target path
-4. Read every AGENTS.md found along each route
-5. If a parent AGENTS.md lists a child AGENTS.md whose scope contains the path, read that child and continue from there
-6. Use the nearest AGENTS.md as the local contract and parent docs for repo-wide rules
-7. If docs conflict, the closer doc controls local work details, but no child doc may weaken DOX
-
-Do not rely on memory. Re-read the applicable DOX chain in the current session before editing.
-
-## Update After Editing
-
-Every meaningful change requires a DOX pass before the task is done.
-Update the closest owning AGENTS.md when a change affects:
-- purpose, scope, ownership, or responsibilities
-- durable structure, contracts, workflows, or operating rules
-- required inputs, outputs, permissions, constraints, side effects, or artifacts
-- user preferences about behavior, communication, process, organization, or quality
-- AGENTS.md creation, deletion, move, rename, or index contents
-
-Update parent docs when parent-level structure, ownership, workflow, or child index changes. Update child docs when parent changes alter local rules. Remove stale or contradictory text immediately. Small edits that do not change behavior or contracts do not require DOX updates.
-
-## Local Details
-
-- **Role**: LRP (Lightweight Resource Planning) core framework. Provides dynamic entity modeling, event-driven workflows, and an AI-agent-friendly runtime environment.
-- **Type**: core/platform
-- **Audience**: AI agents, developers, internal integrations
-- **Technology**: Elixir, Ecto/SQLite, Metaprogramming, DSL/JSON schemas
-- **GitHub**: [`https://github.com/ilkerkaanipcioglu/agentandbot/tree/main/LRP`](`https://github.com/ilkerkaanipcioglu/agentandbot/tree/main/LRP`)
-
-## Workspace Index
-
-Below is the directory mapping for this subtree:
-
-- **[README.md](file:///B:/DEV/HAREZM_EKOSISTEMI/LRP/README.md)**: Main master architecture design, roadmap and introduction.
-- **[mix.exs](file:///B:/DEV/HAREZM_EKOSISTEMI/LRP/mix.exs)**: Elixir Mix project configuration.
-- **[lib](file:///B:/DEV/HAREZM_EKOSISTEMI/LRP/lib/AGENTS.md)**: Core application source directory.
-- **[apps](file:///B:/DEV/HAREZM_EKOSISTEMI/LRP/apps/AGENTS.md)**: Plug-and-play LRP micro-services and extensions (e.g., crm, erp, ecommerce).
+Adhere strictly to the Domain-Driven Design directory structure:
+- `/core` -> Runtime & supervisor lifecycle.
+- `/entity` -> Entity engine, objects, items, relationships.
+- `/event` -> Events, Event Sourcing, projections, WAL.
+- `/ledger` -> Hard-schema ledger engine (VUK, IFRS, seals, mappings).
+- `/ai` -> AI Router, classifiers.
+- `/agents` -> Process Mining, compliance auditors.
