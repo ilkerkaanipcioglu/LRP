@@ -22,6 +22,11 @@ a generic, event-driven core that eliminates domain-specific tables and replaces
 9 universal tables. It is designed to be the foundation on which AI-native enterprise
 applications are built.
 
+> **Database Strategy:**
+> - **Development / PoC:** SQLite3 (`ecto_sqlite3`) — zero setup, runs anywhere, used in all current tests.
+> - **Production:** PostgreSQL — required for Row-Level Security (RLS), pgvector (embeddings), and CQRS read model performance. The migration file already includes the RLS `CREATE POLICY` statements; they activate only when the Postgres adapter is detected.
+
+
 ### Why LRP?
 
 | System | Paradigm           |
