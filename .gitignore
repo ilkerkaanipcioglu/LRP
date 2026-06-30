@@ -1,0 +1,18 @@
+# Elixir / Mix Build artifacts
+/_build
+/deps
+/*.ez
+
+# Databases
+/*.db
+/*.db-shm
+/*.db-wal
+/priv/repo/*.db
+/priv/repo/*.db-shm
+/priv/repo/*.db-wal
+
+# Crash dumps and logs
+erl_crash.dump
+npm-debug.log
+.elixir_ls/
+.elixir_ls
