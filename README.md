@@ -6,6 +6,15 @@
 
 ---
 
+## Design Principles
+
+1. **The core stays generic.** The 9-table Object Graph has no domain knowledge (no "customer", "invoice", "stock" keywords in the schema).
+2. **Regulatory domains get hard schemas.** Accounting (VUK/IFRS), payroll, and stock valuation require strict schemas and immutable audit trails. These live in separate layers — not as exceptions, but by design.
+3. **Everything that needs to be auditable is written before acknowledged.** HOT events (RAM-only) are a performance trade-off acknowledged in the implementation status table below.
+4. **Performance optimizations (Rust/NIF, pgvector indexing) are applied after measurement**, not before. The core is Elixir/BEAM first.
+
+---
+
 ## What LRP Is (Today)
 
 LRP (Lightweight Resource Planning) is an Elixir/SQLite3 based **Object Graph Engine** —
@@ -33,13 +42,19 @@ applications are built.
 | Multi-channel Event Logging | ✅ Done | Email, Slack, A2A (agent_mesh), thread parent_id |
 | Version Snapshots (Full) | ✅ Done | Full snapshot today; JSON Patch delta planned (ADR-0002) |
 | Policy-based Authorization (Static) | ✅ Done | `authorize/3` — allow/deny per resource_type+action |
+| `actor_confidence` on Events + Versions | ✅ Done | NULL=human, 0.0-1.0=agent; low confidence triggers human review |
+| `AgentContext` (Explainability) | ✅ Done | reasoning_trace, model_version, prompt_hash per agent action |
+| `AgentCapability` (MCP Tool Registry) | ✅ Done | MCP-compatible tool definitions per actor |
+| `idempotency_key` on Events | ✅ Done | Retry-safe; duplicate inserts rejected at DB level |
+| `embedding` field on Objects | ✅ Done | Binary field; pgvector(1536) on PostgreSQL via separate migration |
 | PostgreSQL RLS | 🔲 Schema ready | SQL in migration, requires PostgreSQL adapter |
-| HOT Event Durability | ⚠️ Partial | HOT events are RAM-only today; WAL/ring-buffer not yet implemented — **"Everything is traceable" does not apply to HOT tier yet** |
-| Ledger (VUK/IFRS) | 🔲 Planned | Schema defined in README; no Ecto schemas or migrations yet |
-| Ledger Explainability | 🔲 Planned | `source_event_id → POSTING_RULE → JOURNAL_LINE` audit chain not yet built — **"Everything is explainable" applies to Object Graph only today** |
+| HOT Event Durability | ⚠️ Partial | HOT events are RAM-only today; WAL not yet implemented — **"Everything is traceable" does not apply to HOT tier yet** |
+| Ledger (VUK/IFRS) | 🔲 Planned | Schema defined; no Ecto schemas or migrations yet |
+| Ledger Explainability | 🔲 Planned | `source_event_id → POSTING_RULE → JOURNAL_LINE` chain not yet built — **applies to Object Graph only today** |
 | ReBAC / OpenFGA | 🔲 Planned | ADR-0003 accepted; static Policy table used for now |
-| CQRS Read Views | 🔲 Planned | ADR-0001 accepted; no consumer/projection workers yet |
+| CQRS Read Views | 🔲 Planned | ADR-0001 accepted; no consumers yet |
 | JSON Patch Versioning | 🔲 Planned | ADR-0002 accepted; full snapshot used today |
+| Rust/NIF Analytics | 🔲 Phase 3 | Applied after profiling shows BEAM bottleneck; not before |
 
 ---
 
@@ -54,10 +69,12 @@ applications are built.
 | 3 | `OBJECT` | Everything: Party, Resource, Document, Folder, Case |
 | 4 | `ITEM` | Line items: invoice lines, checklist items, agenda lines |
 | 5 | `RELATIONSHIP` | Generic semantic graph edges (ReBAC basis) |
-| 6 | `EVENT` | Append-only event stream: Email, Slack, A2A, Webhooks |
+| 6 | `EVENT` | Append-only event stream: Email, Slack, A2A, Webhooks. Tier: **HOT** (RAM-only) \| **DURABLE** (DB). `actor_confidence` + `idempotency_key` fields. |
 | 7 | `POLICY` | Static allow/deny rules (ReBAC planned via OpenFGA) |
 | 8 | `PROCESS_TASK` | Workflow state machine steps |
-| 9 | `VERSION` | Object revision history (full snapshot today, JSON Patch planned) |
+| 9 | `VERSION` | Object revision history. `actor_confidence` per commit (NULL=human). |
+| 10 | `AGENT_CONTEXT` | Agent decision audit: reasoning_trace, confidence_score, model_version, prompt_hash |
+| 11 | `AGENT_CAPABILITY` | MCP-compatible tool registry per agent actor |
 
 ### Ledger Layer (Schema Defined, Not Yet Implemented)
 
