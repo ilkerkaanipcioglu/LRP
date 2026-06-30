@@ -132,5 +132,12 @@ defmodule LRP.Repo.Migrations.CreateLRPObjectGraph do
     create index(:versions, [:object_id])
     create index(:versions, [:parent_version_id])
     create index(:versions, [:committed_by_actor_id])
+
+    # Enable PostgreSQL Row-Level Security (RLS) on Objects table
+    # This SQL executes only on Postgres adapters to guarantee tenant isolation at DB level.
+    if direction() == :up and repo().__adapter__() == Ecto.Adapters.Postgres do
+      execute "ALTER TABLE objects ENABLE ROW LEVEL SECURITY;"
+      execute "CREATE POLICY tenant_isolation_policy ON objects FOR ALL TO public USING (tenant_id = current_setting('app.current_tenant_id', true)::uuid);"
+    end
   end
 end
