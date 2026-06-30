@@ -13,7 +13,7 @@ defmodule LRP.Inbox do
   """
 
   alias LRP.Repo
-  alias LRP.{Object, Event, Relationship}
+  alias LRP.Event
 
   @doc """
   Gelen bir e-postayı LRP'ye alır.
