@@ -1,7 +1,7 @@
 # LRP — Adaptif Kurumsal Çekirdek Sistemi
 ## Mimari Vizyon ve Object Graph Çekirdek İşletim Sistemi Dokümanı
 
-LRP (Lightweight Resource Planning), kurumsal iş uygulamalarının (ERP, CRM, İK, E-Ticaret, Arşiv vb.) ortak ihtiyaçlarını karşılayan; **Notion + Linear + SAP + Temporal + Git** mimari felsefelerinin hibritleşimiyle tasarlanmış, Elixir tabanlı bir **Object Graph (Nesne Grafiği) İşletim Sistemi** çekirdeğidir.
+LRP (Lightweight Resource Planning), kurumsal iş uygulamalarının (ERP, CRM, İK, E-Ticaret, Arşiv vb.) ortak ihtiyaçlarını karşılayan; modüler ve olay tabanlı nesne grafiği mimarisiyle tasarlanmış, Elixir tabanlı bir **Object Graph (Nesne Grafiği) İşletim Sistemi** çekirdeğidir.
 
 ---
 
