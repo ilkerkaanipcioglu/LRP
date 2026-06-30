@@ -120,9 +120,11 @@ PROCESS_TASK(id, tenant_id, process_name, object_id, state, assigned_actor_id, s
 VERSION(id, object_id, parent_version_id, commit_message, committed_by_actor_id, committed_at, object_snapshot[JSONB])
 ```
 
-### 4.2 Muhasebe İstisnası
+### 4.2 Muhasebe İstisnası ve Ledger Katmanı
 
-Muhasebe, double-entry zorunluluğu ve denetim/uyumluluk gereksinimleri nedeniyle jenerik nesne grafiğine zorlanmaz; ayrı, katı kurallı bir modül olarak kalır:
+LRP, operasyonel iş akışları ile yasal/mali kayıtları mimari olarak ayırmak üzere iki temel katman barındırır:
+1.  **Nesne Grafiği Katmanı (Object Graph - Dinamik):** CRM, İK, ERP süreçlerinin jenerik 9 tablo üzerinde esnekçe koşturulduğu katman.
+2.  **Defter Katmanı (Ledger - Statik/Değişmez):** Çift girişli muhasebe, stok envanter bakiyeleri ve banka hesap hareketleri gibi katı yasal mevzuat ve denetim gerektiren işlemler için tasarlanmış değişmez (immutable) defter yapısı:
 
 ```
 ACCOUNT(id, tenant_id, code, name, account_type)
@@ -155,7 +157,7 @@ Klasik ERP/CRM modülleri LRP'de ayrı tablolar değildir; çekirdek tabloların
 ## 6. Hız ve Büyüklük Katmanlandırması (Speed & Size Tiering)
 
 ### 6.1 EVENT Hız Katmanları
-- **`HOT` (Ajan-Ajan / AgentMesh):** Saniyeler–dakikalar arası yaşar, doğrudan RAM'de (Phoenix.PubSub / NATS memory) tutulur, diske yazılmaz.
+- **`HOT` (Ajan-Ajan / AgentMesh):** RAM'de (Phoenix.PubSub / NATS memory) akar. Dayanıklılık ve node çökme riskine karşı asenkron olarak geçici bir **Write-Ahead Log (WAL)** dosyasına veya ring-buffer'a yazılır, böylece crash durumunda son state kurtarılabilir.
 - **`WARM` (Operasyonel):** "Mail geldi", "Onay istendi" gibi iş olayları. Günler-aylar boyu sorgulanabilir.
 - **`COLD` (Kalıcı/Denetim):** Yasal arşiv ve süreç analizine (Process Mining) tabi olan olaylar. PostgreSQL veya append-only sıkıştırılmış S3 arşivinde tutulur.
 
@@ -174,5 +176,32 @@ Klasik ERP/CRM modülleri LRP'de ayrı tablolar değildir; çekirdek tabloların
   - *Oban*: Tekrar denemeli entegrasyonlar ve `paused` durumunda bekleyen insan onay işleri.
   - *Ecto, SQLite3 / PostgreSQL*: Dinamik veri modelleme (JSONB) ve audit trail.
 - **Rust (Performans-Kritik Analitik)**:
-  - *Rustler NIF*: Elixir ile Rust arasında yüksek hızlı veri köprüsü.
-  - *Polars & Petgraph*: Büyük loglarda süreç çıkarımı (Process Mining) ve grafik analizi.
+  - *Rustler NIF*: Elixir ile Rust arasında yüksek hızlı veri köprüsü (Optimizasyon gerekmesi durumunda Phase 2 sonrasında devreye alınacaktır).
+
+---
+
+## 8. Mimari Kararlar ve Sorun Çözümleri (ADR)
+
+### 8.1 EAV Sorgu Bedeli ve CQRS
+"Everything is an Object" modelinin (EAV + JSONB) getirdiği karmaşık JOIN sorgularını ve performans düşüşlerini aşmak için **CQRS (Command Query Responsibility Segregation)** uygulanır:
+- **Write Path (Yazma):** Nesne grafiği (9 jenerik tablo) üzerinde esnekçe çalışır.
+- **Read Path (Okuma/Raporlama):** Arka planda asenkron olarak çalışan event consumer'lar, raporlama ve finansal mutabakat için düzleştirilmiş **Materialized Read Views (Düz Tablolar)** üretir (örn: `InvoiceView`, `CustomerView`). Sorgu ve raporlar doğrudan bu optimize edilmiş düz tablolar üzerinden çekilir.
+
+### 8.2 JSON Patch (RFC 6902) ile Versiyonlama
+`VERSION` tablosundaki storage patlamasını önlemek için full snapshot yerine **JSON Patch (RFC 6902)** tabanlı delta/diff yapısına geçilmiştir:
+- İlk commit (`v1`) full snapshot (`object_snapshot`) barındırır.
+- Sonraki commit'ler (`v2`, `v3` vb.) yalnızca bir önceki versiyonla arasındaki farkı (JSON Patch array) saklar, böylece depolama maliyeti %90 azaltılır.
+
+### 8.3 Multi-Tenant İzolasyonu (Row-Level Security)
+Çoklu şirket/kiracı verilerinin güvenliği uygulama kodundaki `where` filtrelerine bırakılamaz. PostgreSQL düzeyinde **Row-Level Security (RLS)** kullanımı zorunludur:
+- Her veri talebi öncesinde veritabanı oturumunda `app.current_tenant_id` set edilir.
+- RLS policy'leri, bu ID ile eşleşmeyen hiçbir verinin okunmasına veya yazılmasına veritabanı engine seviyesinde izin vermez.
+
+### 8.4 Graph-based Yetkilendirme (ReBAC)
+Basit statik roller yerine, nesneler arası ilişkileri baz alan **Relation-based Access Control (ReBAC)** mimarisi uygulanır:
+- "Actor X, Document Y'yi okuyabilir" yetkisi, `RELATIONSHIP` tablosundaki graf bağları (örn: `member_of` -> `department_z`) üzerinden dinamik olarak türetilir.
+
+### 8.5 CC E-posta Spoofing ve DKIM/SPF Doğrulaması
+ CC/BCC yöntemiyle sisteme giren e-postaların güvenliği için **DKIM/SPF ve Actor Eşleme** kuralları uygulanır:
+- LRP Inbox Gateway, gelen maillerin SPF ve DKIM imzalarını doğrulamadan içeri almaz.
+- E-postayı gönderen adres, sistemdeki onaylanmış bir `ACTOR` veya `Party` ile eşleşmiyorsa işlem reddedilir veya karantinaya alınır.
