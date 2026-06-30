@@ -120,16 +120,55 @@ PROCESS_TASK(id, tenant_id, process_name, object_id, state, assigned_actor_id, s
 VERSION(id, object_id, parent_version_id, commit_message, committed_by_actor_id, committed_at, object_snapshot[JSONB])
 ```
 
-### 4.2 Muhasebe İstisnası ve Ledger Katmanı
+### 4.2 Defter Katmanı (Ledger - Muhasebe & Uyum)
 
-LRP, operasyonel iş akışları ile yasal/mali kayıtları mimari olarak ayırmak üzere iki temel katman barındırır:
-1.  **Nesne Grafiği Katmanı (Object Graph - Dinamik):** CRM, İK, ERP süreçlerinin jenerik 9 tablo üzerinde esnekçe koşturulduğu katman.
-2.  **Defter Katmanı (Ledger - Statik/Değişmez):** Çift girişli muhasebe, stok envanter bakiyeleri ve banka hesap hareketleri gibi katı yasal mevzuat ve denetim gerektiren işlemler için tasarlanmış değişmez (immutable) defter yapısı:
+Muhasebe, stok envanter bakiyeleri ve banka hesap hareketleri gibi yasal ve değişmez (immutable) çift girişli kayıtlar jenerik nesne grafiğine zorlanmaz. LRP, yasal denetime hazır, VUK, IFRS ve SPK konsolidasyon kurallarına tam uyumlu ayrı bir **Ledger (Defter) Katmanı** barındırır:
 
+#### 1. LEDGER (Defter Tanımı)
+Her tenant yasal (Leading - örn: VUK) ve alternatif (non-leading - örn: IFRS) defterlerini burada tutar.
 ```
-ACCOUNT(id, tenant_id, code, name, account_type)
-JOURNAL(id, tenant_id, doc_date, posting_date, reference)
-JOURNAL_LINE(id, journal_id, account_id, party_id[nullable], debit, credit, currency)
+LEDGER(id, tenant_id, scheme[VUK|IFRS|SPK_CONSOLIDATED], currency, is_leading, status)
+```
+
+#### 2. ACCOUNT (Hesap Planı)
+```
+ACCOUNT(id, tenant_id, ledger_id, code, name, account_type)
+```
+
+#### 3. ACCOUNT_MAPPING (Hesap Planı Çeviri Matrisi)
+VUK hesap planı ile IFRS hesap planı arasındaki ilişkiyi kurar.
+```
+ACCOUNT_MAPPING(id, vuk_account_id, ifrs_account_id, mapping_type)
+```
+
+#### 4. JOURNAL (Yevmiye Fişi)
+Ekonomik olayların defterlere postalandığı fiş kaydı. `source_event_id` (`EVENT.id`) ile tam izlenebilirlik (audit trail) kurulur. Tek bir olay, VUK ve IFRS defterlerine ayrı ayrı postalanarak iki farklı `JOURNAL` satırı oluşturur.
+```
+JOURNAL(id, tenant_id, ledger_id, doc_date, posting_date, reference, source_event_id)
+```
+
+#### 5. JOURNAL_LINE (Yevmiye Satırı)
+Bakiye satırları. Ters kayıt (storno stili) ve vergilendirme detaylarını barındırır. `party_id` alanı, jenerik nesne grafiğindeki `OBJECT.id` alanına soft-referans (UUID) olarak bağlanır.
+```
+JOURNAL_LINE(id, journal_id, account_id, party_id[soft_ref_uuid], debit, credit, currency, is_reversed, reversed_by_journal_id, vat_code, withholding_code)
+```
+
+#### 6. FISCAL_PERIOD (Dönem Kilitleri)
+Kapanmış veya kilitlenmiş mali dönemlerde (`posting_date`) geriye dönük kayıt değiştirilmesini DB constraint seviyesinde engeller.
+```
+FISCAL_PERIOD(id, tenant_id, ledger_id, period_start, period_end, status[open|closed|locked])
+```
+
+#### 7. POSTING_RULE (Otomatik Muhasebeleşme Kural Motoru)
+Gelen olayların (`EVENT.event_type`) defterlere hangi hesap kodları ve kurallarla postalanacağını tanımlar (SAP Account Determination benzeri).
+```
+POSTING_RULE(id, tenant_id, event_type, ledger_id, debit_account_id, credit_account_id, amount_formula, condition)
+```
+
+#### 8. LEDGER_SEAL (GİB e-Defter Beratı)
+Aylık kapanışlarda üretilen GİB e-defter XML imzalarını ve berat hash'lerini değişmez olarak saklar.
+```
+LEDGER_SEAL(id, ledger_id, period, gib_beratı_hash, signed_at, xml_storage_key)
 ```
 
 ---
