@@ -117,9 +117,10 @@ defmodule LRP.Onboarding do
       obs ->
         Repo.transaction(fn ->
           # 1. ObservationMode'u kapat
-          obs
-          |> ObservationMode.changeset(%{status: "completed"})
-          |> Repo.update!()
+          updated_obs =
+            obs
+            |> ObservationMode.changeset(%{status: "completed"})
+            |> Repo.update!()
 
           # 2. Aktivasyon event'i oluştur (kullanıcı kararı)
           %Event{}
@@ -134,7 +135,7 @@ defmodule LRP.Onboarding do
           })
           |> Repo.insert!()
 
-          %{observation_mode: obs, status: "activated"}
+          %{observation_mode: updated_obs, status: "activated"}
         end)
     end
   end
@@ -237,7 +238,7 @@ defmodule LRP.Onboarding do
     # ObservationMode yaşı
     obs = Repo.get(ObservationMode, observation_mode_id)
     days_observed = if obs do
-      DateTime.diff(DateTime.utc_now(), obs.inserted_at, :day)
+      NaiveDateTime.diff(NaiveDateTime.utc_now(), obs.inserted_at, :day)
     else
       0
     end

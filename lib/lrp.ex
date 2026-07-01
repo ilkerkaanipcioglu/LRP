@@ -9,7 +9,7 @@ defmodule LRP do
   alias LRP.{Tenant, Actor, Object, Item, Relationship, Event, Policy, ProcessTask, Version}
   alias LRP.{AgentContext, AgentCapability}
   alias LRP.{Ledger, Journal, JournalLine, FiscalPeriod}
-  alias LRP.{Connector, EventSubscription}
+  alias LRP.{Connector, EventSubscription, PostingRule}
 
   # ─── Tenant API ─────────────────────────────────────────────────────────────
   def create_tenant(attrs) do
@@ -167,6 +167,7 @@ defmodule LRP do
       {:ok, event} ->
         if event.event_type != "webhook_delivery_failed" do
           LRP.Connector.Dispatcher.dispatch(event)
+          process_posting_rules(event)
         end
         {:ok, event}
       error ->
@@ -523,6 +524,74 @@ defmodule LRP do
     else
       pattern == event_type
     end
+  end
+
+  # ─── Posting Rules API (Sprint 5+ / MVP) ────────────────────────────────────
+
+  @doc "Yeni bir yevmiye posting kuralı tanımlar."
+  def create_posting_rule(attrs) do
+    %PostingRule{} |> PostingRule.changeset(attrs) |> Repo.insert()
+  end
+
+  @doc """
+  Bir Event'i alır, onunla eşleşen posting kuralları varsa otomatik olarak
+  yevmiye kaydı (Journal) oluşturur.
+  """
+  def process_posting_rules(%Event{} = event) do
+    rules =
+      PostingRule
+      |> where(tenant_id: ^event.tenant_id, event_type: ^event.event_type, status: "active")
+      |> Repo.all()
+
+    Enum.map(rules, fn rule ->
+      payload = event.payload || %{}
+      
+      # amount_path string veya atom key olabilir
+      amount_val = 
+        case Map.get(payload, rule.amount_path) do
+          nil ->
+            try do
+              Map.get(payload, String.to_existing_atom(rule.amount_path))
+            rescue
+              _ -> nil
+            end
+          val ->
+            val
+        end
+
+      amount =
+        case amount_val do
+          nil -> 0.0
+          val when is_number(val) -> val
+          val when is_binary(val) ->
+            # Para sembollerini temizle
+            val
+            |> String.replace(~r/[^\d.]/, "")
+            |> Float.parse()
+            |> case do
+              {f, _} -> f
+              _ -> 0.0
+            end
+          _ -> 0.0
+        end
+
+      if amount > 0.0 do
+        journal_attrs = %{
+          doc_date: Date.utc_today(),
+          posting_date: Date.utc_today(),
+          source_event_id: event.id
+        }
+
+        lines = [
+          %{account_id: rule.debit_account, debit: amount, credit: 0.0},
+          %{account_id: rule.credit_account, debit: 0.0, credit: amount}
+        ]
+
+        post_journal(event.tenant_id, rule.ledger_id, journal_attrs, lines)
+      else
+        {:error, :invalid_amount}
+      end
+    end)
   end
 end
 

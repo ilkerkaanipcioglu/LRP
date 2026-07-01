@@ -688,4 +688,35 @@ defmodule LRP.EventSubscription do
   end
 end
 
+# ─── Posting Rules (Sprint 5+ / MVP) ──────────────────────────────────────────
+
+defmodule LRP.PostingRule do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+  schema "posting_rules" do
+    field :tenant_id,      :binary_id
+    field :ledger_id,      :binary_id
+    field :event_type,     :string
+    field :debit_account,  :string
+    field :credit_account, :string
+    field :amount_path,    :string
+    field :status,         :string, default: "active"
+
+    timestamps()
+  end
+
+  def changeset(rule, attrs) do
+    rule
+    |> cast(attrs, [:tenant_id, :ledger_id, :event_type, :debit_account,
+                    :credit_account, :amount_path, :status])
+    |> validate_required([:tenant_id, :ledger_id, :event_type, :debit_account,
+                          :credit_account, :amount_path])
+    |> validate_inclusion(:status, ["active", "paused"])
+  end
+end
+
+
 
