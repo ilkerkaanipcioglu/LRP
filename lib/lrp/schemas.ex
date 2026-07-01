@@ -184,16 +184,19 @@ defmodule LRP.ProcessTask do
   schema "process_tasks" do
     field :tenant_id, :binary_id
     field :process_name, :string
+    field :name, :string
     field :object_id, :binary_id
     field :state, :string
     field :assigned_actor_id, :binary_id
     field :status, :string, default: "pending"
+    field :priority, :string, default: "medium"
+    field :metadata, :map, default: %{}
     timestamps()
   end
 
   def changeset(task, attrs) do
     task
-    |> cast(attrs, [:tenant_id, :process_name, :object_id, :state, :assigned_actor_id, :status])
+    |> cast(attrs, [:tenant_id, :process_name, :name, :object_id, :state, :assigned_actor_id, :status, :priority, :metadata])
     |> validate_required([:tenant_id, :process_name, :object_id, :state])
   end
 end

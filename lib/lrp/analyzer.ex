@@ -236,13 +236,15 @@ defmodule LRP.Analyzer do
       end)
 
     # EVENT: analiz tamamlandı
-    {:ok, _event} = LRP.log_event(%{
+    idempotency_key = "analyze:#{tenant_id}:#{source}:#{Date.utc_today()}"
+    event_attrs = %{
       tenant_id:        tenant_id,
       event_type:       "source_analyzed",
       source:           "lrp_analyzer",
       tier:             "DURABLE",
       actor_confidence: 0.95,
-      idempotency_key:  "analyze:#{tenant_id}:#{source}:#{Date.utc_today()}",
+      idempotency_key:  idempotency_key,
+      occurred_at:      DateTime.utc_now(),
       payload: %{
         "source"         => source,
         "language"       => language,
@@ -250,7 +252,19 @@ defmodule LRP.Analyzer do
         "lrp_score"      => score.total,
         "files_analyzed" => stats.files
       }
-    })
+    }
+
+    import Ecto.Query
+    _event =
+      case LRP.Repo.insert(LRP.Event.changeset(%LRP.Event{}, event_attrs),
+             on_conflict: :nothing,
+             conflict_target: :idempotency_key
+           ) do
+        {:ok, %LRP.Event{id: nil}} ->
+          LRP.Repo.one!(from(e in LRP.Event, where: e.idempotency_key == ^idempotency_key))
+        {:ok, ev} ->
+          ev
+      end
 
     # PROCESS_TASK'lar — iyileştirme önerileri
     tasks = generate_tasks(tenant_id, source_obj.id, actor_id, modules, score)
@@ -321,7 +335,9 @@ defmodule LRP.Analyzer do
         tenant_id:         tenant_id,
         object_id:         source_id,
         assigned_actor_id: actor_id,
+        process_name:      "LRP Code Compliance Analysis",
         name:              name,
+        state:             "suggested",
         status:            "pending",
         priority:          priority,
         metadata:          %{"description" => desc, "source" => "lrp_analyzer"}
