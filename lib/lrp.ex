@@ -9,6 +9,7 @@ defmodule LRP do
   alias LRP.{Tenant, Actor, Object, Item, Relationship, Event, Policy, ProcessTask, Version}
   alias LRP.{AgentContext, AgentCapability}
   alias LRP.{Ledger, Journal, JournalLine, FiscalPeriod}
+  alias LRP.{Connector, EventSubscription}
 
   # ─── Tenant API ─────────────────────────────────────────────────────────────
   def create_tenant(attrs) do
@@ -162,7 +163,15 @@ defmodule LRP do
   # idempotency_key: retry-safe, aynı event iki kez insert edilemez
   def log_event(attrs) do
     attrs = Map.put_new(attrs, :occurred_at, DateTime.utc_now())
-    %Event{} |> Event.changeset(attrs) |> Repo.insert()
+    case %Event{} |> Event.changeset(attrs) |> Repo.insert() do
+      {:ok, event} ->
+        if event.event_type != "webhook_delivery_failed" do
+          LRP.Connector.Dispatcher.dispatch(event)
+        end
+        {:ok, event}
+      error ->
+        error
+    end
   end
 
   def get_event(id), do: Repo.get(Event, id)
@@ -473,5 +482,47 @@ defmodule LRP do
   defp to_decimal(v) when is_integer(v), do: Decimal.new(v)
   defp to_decimal(v) when is_binary(v), do: Decimal.new(v)
   defp to_decimal(v), do: v
+
+  # ─── Connector & Subscription API (ADR-0007) ────────────────────────────────
+
+  @doc "Yeni bir Connector tanımlar."
+  def create_connector(attrs) do
+    %Connector{} |> Connector.changeset(attrs) |> Repo.insert()
+  end
+
+  @doc "Yeni bir EventSubscription (Webhook abonesi) oluşturur."
+  def create_subscription(attrs) do
+    %EventSubscription{} |> EventSubscription.changeset(attrs) |> Repo.insert()
+  end
+
+  @doc "Verilen event_type ile eşleşen aktif abonelikleri listeler."
+  def list_active_subscriptions(tenant_id, event_type) do
+    EventSubscription
+    |> where(tenant_id: ^tenant_id, status: "active")
+    |> Repo.all()
+    |> Enum.filter(&match_event_pattern?(&1.event_type_pattern, event_type))
+  end
+
+  @doc """
+  Basit glob pattern matching gerçekleştirir.
+  Örnek:
+    "invoice.*" matches "invoice.approved", "invoice.created"
+    "*" matches everything
+  """
+  def match_event_pattern?("*", _), do: true
+  def match_event_pattern?(pattern, event_type) do
+    if String.contains?(pattern, "*") do
+      regex_str =
+        pattern
+        |> Regex.escape()
+        # Escaped yıldız karakterini Regex dot-all karakterine çevir
+        |> String.replace("\\*", ".*")
+      
+      regex = Regex.compile!("^" <> regex_str <> "$")
+      Regex.match?(regex, event_type)
+    else
+      pattern == event_type
+    end
+  end
 end
 

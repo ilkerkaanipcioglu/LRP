@@ -631,3 +631,58 @@ defmodule LRP.FiscalPeriod do
   end
 end
 
+# ─── Connector & EventSubscription (Sprint 5+ / ADR-0007) ─────────────────────
+
+defmodule LRP.Connector do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+  schema "connectors" do
+    field :tenant_id,   :binary_id
+    field :type,        :string
+    field :config,      :map, default: %{}
+    field :auth_method, :string
+    field :status,      :string, default: "active"
+
+    timestamps()
+  end
+
+  def changeset(connector, attrs) do
+    connector
+    |> cast(attrs, [:tenant_id, :type, :config, :auth_method, :status])
+    |> validate_required([:tenant_id, :type, :config, :auth_method])
+    |> validate_inclusion(:status, ["active", "paused", "error", "deprecated"])
+  end
+end
+
+defmodule LRP.EventSubscription do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+  schema "event_subscriptions" do
+    field :tenant_id,           :binary_id
+    field :actor_id,            :binary_id
+    field :event_type_pattern,  :string
+    field :webhook_url,         :string
+    field :secret,              :string
+    field :max_causation_depth, :integer, default: 3
+    field :status,              :string, default: "active"
+
+    timestamps()
+  end
+
+  def changeset(sub, attrs) do
+    sub
+    |> cast(attrs, [:tenant_id, :actor_id, :event_type_pattern, :webhook_url,
+                    :secret, :max_causation_depth, :status])
+    |> validate_required([:tenant_id, :event_type_pattern, :webhook_url])
+    |> validate_inclusion(:status, ["active", "paused", "error"])
+    |> validate_number(:max_causation_depth, greater_than_or_equal_to: 1)
+  end
+end
+
+
