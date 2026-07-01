@@ -21,9 +21,10 @@ defmodule LRP.Analyzer do
   """
 
   alias LRP.CodeParser.ElixirParser
+  alias LRP.CodeParser.PythonParser
 
   # ─── Ana Giriş ──────────────────────────────────────────────────────────────
-
+  
   @doc """
   Kaynağı analiz eder ve sonuçları LRP'ye yazar.
 
@@ -62,16 +63,51 @@ defmodule LRP.Analyzer do
   end
 
   defp parse_local(path) do
-    case ElixirParser.parse_directory(path) do
-      {:ok, modules} ->
-        stats = %{
-          files:     count_files(path),
-          modules:   length(modules),
-          functions: modules |> Enum.flat_map(& &1.functions) |> length()
-        }
-        {:ok, modules, stats, "Elixir"}
-      {:error, reason} -> {:error, reason}
+    lang = detect_language(path)
+
+    case lang do
+      "Python" ->
+        case PythonParser.parse_directory(path) do
+          {:ok, modules} ->
+            stats = %{
+              files:     count_python_files(path),
+              modules:   length(modules),
+              functions: modules |> Enum.flat_map(& &1.functions) |> length()
+            }
+            {:ok, modules, stats, "Python"}
+          {:error, reason} -> {:error, reason}
+        end
+
+      _ ->
+        case ElixirParser.parse_directory(path) do
+          {:ok, modules} ->
+            stats = %{
+              files:     count_files(path),
+              modules:   length(modules),
+              functions: modules |> Enum.flat_map(& &1.functions) |> length()
+            }
+            {:ok, modules, stats, "Elixir"}
+          {:error, reason} -> {:error, reason}
+        end
     end
+  end
+
+  defp detect_language(path) do
+    py_files = Path.wildcard("#{path}/**/*.py") |> Enum.reject(&String.contains?(&1, "/venv/"))
+    ex_files = Path.wildcard("#{path}/**/*.{ex,exs}") |> Enum.reject(&String.contains?(&1, "/deps/"))
+
+    cond do
+      length(py_files) > length(ex_files) -> "Python"
+      true -> "Elixir"
+    end
+  end
+
+  defp count_python_files(path) do
+    Path.wildcard("#{path}/**/*.py")
+    |> Enum.reject(&String.contains?(&1, "/venv/"))
+    |> Enum.reject(&String.contains?(&1, "/.venv/"))
+    |> Enum.reject(&String.contains?(&1, "/__pycache__/"))
+    |> length()
   end
 
   defp parse_github(url) do
