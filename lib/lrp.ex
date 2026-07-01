@@ -8,6 +8,7 @@ defmodule LRP do
   alias LRP.Repo
   alias LRP.{Tenant, Actor, Object, Item, Relationship, Event, Policy, ProcessTask, Version}
   alias LRP.{AgentContext, AgentCapability}
+  alias LRP.{Ledger, Journal, JournalLine, FiscalPeriod}
 
   # ─── Tenant API ─────────────────────────────────────────────────────────────
   def create_tenant(attrs) do
@@ -375,4 +376,102 @@ defmodule LRP do
 
   @doc "Tüm actor'ları döner."
   def list_actors, do: Repo.all(Actor)
+
+  # ─── Ledger API (Sprint 4) ──────────────────────────────────────────────────
+
+  @doc "Yeni bir Ledger (defter) oluşturur."
+  def create_ledger(attrs) do
+    %Ledger{} |> Ledger.changeset(attrs) |> Repo.insert()
+  end
+
+  @doc "Yeni bir Journal (yevmiye fişi) oluşturur."
+  def create_journal(attrs) do
+    %Journal{} |> Journal.changeset(attrs) |> Repo.insert()
+  end
+
+  @doc "Yeni bir JournalLine (yevmiye satırı) oluşturur."
+  def create_journal_line(attrs) do
+    %JournalLine{} |> JournalLine.changeset(attrs) |> Repo.insert()
+  end
+
+  @doc "Yeni bir FiscalPeriod (mali dönem) oluşturur."
+  def create_fiscal_period(attrs) do
+    %FiscalPeriod{} |> FiscalPeriod.changeset(attrs) |> Repo.insert()
+  end
+
+  @doc "Verilen bir tarihin o tenant ve ledger için açık olup olmadığını kontrol eder."
+  def is_period_open?(tenant_id, ledger_id, %Date{} = date) do
+    query =
+      from(p in FiscalPeriod,
+        where: p.tenant_id == ^tenant_id and
+               p.ledger_id == ^ledger_id and
+               p.period_start <= ^date and
+               p.period_end >= ^date,
+        select: p.status
+      )
+
+    case Repo.one(query) do
+      "open" -> true
+      _ -> false
+    end
+  end
+
+  @doc """
+  Bir Journal begesi ve buna bağlı satırları (journal_lines) veritabanına yazar.
+  İşlemi bir transaction içinde gerçekleştirir ve dönem kilidini kontrol eder.
+  """
+  def post_journal(tenant_id, ledger_id, journal_attrs, lines) do
+    posting_date = journal_attrs[:posting_date] || journal_attrs["posting_date"]
+
+    date = case posting_date do
+      %Date{} = d -> d
+      str when is_binary(str) -> Date.from_iso8601!(str)
+      _ -> Date.utc_today()
+    end
+
+    if is_period_open?(tenant_id, ledger_id, date) do
+      Repo.transaction(fn ->
+        attrs =
+          journal_attrs
+          |> Map.put(:tenant_id, tenant_id)
+          |> Map.put(:ledger_id, ledger_id)
+          |> Map.put(:posting_date, date)
+
+        # Map veya String key uyumluluğu için
+        attrs = if is_map(attrs), do: attrs, else: Map.new(attrs)
+
+        {:ok, journal} =
+          %Journal{}
+          |> Journal.changeset(attrs)
+          |> Repo.insert()
+
+        inserted_lines =
+          Enum.map(lines, fn line_attrs ->
+            line_attrs =
+              line_attrs
+              |> Map.put(:journal_id, journal.id)
+              # Decimal dönüşümleri
+              |> Map.update(:debit, 0.0, &to_decimal/1)
+              |> Map.update(:credit, 0.0, &to_decimal/1)
+
+            {:ok, line} =
+              %JournalLine{}
+              |> JournalLine.changeset(line_attrs)
+              |> Repo.insert()
+            line
+          end)
+
+        %{journal: journal, lines: inserted_lines}
+      end)
+    else
+      {:error, :fiscal_period_closed_or_missing}
+    end
+  end
+
+  defp to_decimal(%Decimal{} = d), do: d
+  defp to_decimal(v) when is_float(v), do: Decimal.from_float(v)
+  defp to_decimal(v) when is_integer(v), do: Decimal.new(v)
+  defp to_decimal(v) when is_binary(v), do: Decimal.new(v)
+  defp to_decimal(v), do: v
 end
+

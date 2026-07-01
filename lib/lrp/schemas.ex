@@ -531,3 +531,103 @@ defmodule LRP.MigrationTracker do
     |> validate_number(:discrepancy_count, greater_than_or_equal_to: 0)
   end
 end
+
+# ─── Minimum Viable Ledger (Sprint 4) ─────────────────────────────────────────
+
+defmodule LRP.Ledger do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+  schema "ledgers" do
+    field :tenant_id,  :binary_id
+    field :scheme,     :string # "VUK", "IFRS"
+    field :is_leading, :boolean, default: false
+    field :status,     :string, default: "active"
+
+    timestamps()
+  end
+
+  def changeset(ledger, attrs) do
+    ledger
+    |> cast(attrs, [:tenant_id, :scheme, :is_leading, :status])
+    |> validate_required([:tenant_id, :scheme])
+    |> validate_inclusion(:scheme, ["VUK", "IFRS"])
+    |> validate_inclusion(:status, ["active", "closed"])
+  end
+end
+
+defmodule LRP.Journal do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+  schema "journals" do
+    field :tenant_id,       :binary_id
+    field :ledger_id,       :binary_id
+    field :doc_date,        :date
+    field :posting_date,    :date
+    field :source_event_id, :binary_id
+
+    timestamps()
+  end
+
+  def changeset(journal, attrs) do
+    journal
+    |> cast(attrs, [:tenant_id, :ledger_id, :doc_date, :posting_date, :source_event_id])
+    |> validate_required([:tenant_id, :ledger_id, :doc_date, :posting_date])
+  end
+end
+
+defmodule LRP.JournalLine do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+  schema "journal_lines" do
+    field :journal_id,  :binary_id
+    field :account_id,  :string
+    field :debit,       :decimal
+    field :credit,      :decimal
+    field :currency,    :string, default: "TRY"
+    field :is_reversed, :boolean, default: false
+
+    timestamps()
+  end
+
+  def changeset(line, attrs) do
+    line
+    |> cast(attrs, [:journal_id, :account_id, :debit, :credit, :currency, :is_reversed])
+    |> validate_required([:journal_id, :account_id, :debit, :credit])
+    |> validate_number(:debit, greater_than_or_equal_to: 0.0)
+    |> validate_number(:credit, greater_than_or_equal_to: 0.0)
+  end
+end
+
+defmodule LRP.FiscalPeriod do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+  schema "fiscal_periods" do
+    field :tenant_id,    :binary_id
+    field :ledger_id,    :binary_id
+    field :period_start, :date
+    field :period_end,   :date
+    field :status,       :string, default: "open" # "open", "closed"
+
+    timestamps()
+  end
+
+  def changeset(period, attrs) do
+    period
+    |> cast(attrs, [:tenant_id, :ledger_id, :period_start, :period_end, :status])
+    |> validate_required([:tenant_id, :ledger_id, :period_start, :period_end])
+    |> validate_inclusion(:status, ["open", "closed"])
+  end
+end
+
