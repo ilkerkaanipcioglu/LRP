@@ -71,6 +71,90 @@ defmodule LRP do
     Repo.all(query)
   end
 
+  @doc """
+  Başlangıç nesnesinden (from_id) yola çıkarak, belirli bir hedef tipteki (target_type) 
+  ilişkili tüm nesneleri (Objects) getirir. İlişki yönü gözetmeksizin veya gözeterek çalışabilir.
+  """
+  def get_related_objects(from_entity, from_id, target_type) do
+    # Direct ilişkiler: from_id -> to_id
+    from_rels = 
+      Relationship
+      |> where(from_entity: ^to_string(from_entity), from_id: ^from_id, to_entity: ^to_string(target_type))
+      |> select([r], r.to_id)
+      |> Repo.all()
+
+    # Ters ilişkiler: to_id -> from_id
+    to_rels =
+      Relationship
+      |> where(to_entity: ^to_string(from_entity), to_id: ^from_id, from_entity: ^to_string(target_type))
+      |> select([r], r.from_id)
+      |> Repo.all()
+
+    all_ids = Enum.uniq(from_rels ++ to_rels)
+
+    Object
+    |> where([o], o.id in ^all_ids)
+    |> Repo.all()
+  end
+
+  @doc """
+  İki nesne (from_id ve to_id) arasında maksimum derinliğe (max_depth) kadar 
+  bir ilişki bağı/yolu (relationship path) olup olmadığını BFS algoritmasıyla kontrol eder.
+  """
+  def connected?(from_id, to_id, max_depth \\ 3) do
+    bfs_check([[from_id]], to_id, MapSet.new([from_id]), 1, max_depth)
+  end
+
+  defp bfs_check([], _to_id, _visited, _current_depth, _max_depth), do: false
+  defp bfs_check(_paths, _to_id, _visited, current_depth, max_depth) when current_depth > max_depth, do: false
+  defp bfs_check(paths, to_id, visited, current_depth, max_depth) do
+    next_paths =
+      Enum.flat_map(paths, fn path ->
+        last_node = List.last(path)
+        
+        # last_node'un bağlı olduğu tüm komşuları (hem from hem to yönünde) bul
+        neighbors = get_all_neighbors(last_node)
+        
+        Enum.reduce(neighbors, [], fn neighbor, acc ->
+          cond do
+            neighbor == to_id ->
+              # Hedefe ulaşıldı!
+              throw(:found)
+            
+            MapSet.member?(visited, neighbor) ->
+              acc
+            
+            true ->
+              [path ++ [neighbor] | acc]
+          end
+        end)
+      end)
+
+    # Visited setini güncelle
+    new_visited = Enum.reduce(next_paths, visited, fn path, acc ->
+      MapSet.put(acc, List.last(path))
+    end)
+
+    bfs_check(next_paths, to_id, new_visited, current_depth + 1, max_depth)
+  catch
+    :found -> true
+  end
+
+  defp get_all_neighbors(node_id) do
+    from_query =
+      Relationship
+      |> where(from_id: ^node_id)
+      |> select([r], r.to_id)
+
+    to_query =
+      Relationship
+      |> where(to_id: ^node_id)
+      |> select([r], r.from_id)
+
+    Enum.uniq(Repo.all(from_query) ++ Repo.all(to_query))
+  end
+
+
   # ─── Events API ─────────────────────────────────────────────────────────────
   # tier: "HOT" (RAM-only, ajan koordinasyonu) | "DURABLE" (DB'ye yazılır, default)
   # actor_confidence: NULL=insan, 0.0-1.0=ajan (düşük değer → ApprovalRequest tetikler)
@@ -78,6 +162,12 @@ defmodule LRP do
   def log_event(attrs) do
     attrs = Map.put_new(attrs, :occurred_at, DateTime.utc_now())
     %Event{} |> Event.changeset(attrs) |> Repo.insert()
+  end
+
+  def get_event(id), do: Repo.get(Event, id)
+
+  def update_event(%Event{} = event, attrs) do
+    event |> Event.changeset(attrs) |> Repo.update()
   end
 
   # ─── Agent-Native: AGENT_CONTEXT API ────────────────────────────────────────
@@ -194,5 +284,40 @@ defmodule LRP do
 
   def update_process_task(%ProcessTask{} = task, attrs) do
     task |> ProcessTask.changeset(attrs) |> Repo.update()
+  end
+
+  # ─── Tenant-Aware Safe Query APIs (Tier 4 Omurgası) ───────────────────────────
+  def list_objects_by_tenant(tenant_id) do
+    Object |> where(tenant_id: ^tenant_id) |> Repo.all()
+  end
+
+  def list_objects_by_tenant_and_type(tenant_id, type) do
+    Object |> where(tenant_id: ^tenant_id, type: ^type) |> Repo.all()
+  end
+
+  def list_relationships_by_tenant(tenant_id) do
+    # Relationships tablosunda doğrudan tenant_id bulunmadığı için 
+    # to_id nesnesinin bu tenant'a ait olup olmadığını kontrol eden bir JOIN sorgusu kuruyoruz.
+    from(r in Relationship,
+      join: o in Object,
+      on: r.to_id == o.id,
+      where: o.tenant_id == ^tenant_id,
+      select: r
+    )
+    |> Repo.all()
+  end
+
+  def list_events_by_tenant(tenant_id) do
+    Event 
+    |> where(tenant_id: ^tenant_id) 
+    |> order_by([e], desc: e.occurred_at) 
+    |> Repo.all()
+  end
+
+  def list_agent_contexts_by_tenant(tenant_id) do
+    AgentContext 
+    |> where(tenant_id: ^tenant_id) 
+    |> order_by([c], desc: c.inserted_at) 
+    |> Repo.all()
   end
 end

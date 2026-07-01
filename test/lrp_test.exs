@@ -155,4 +155,39 @@ defmodule LRPTest do
     assert LRP.authorize(agent.id, "Document", "commit") == :allow
     assert LRP.authorize(employee.id, "Document", "commit") == :deny
   end
+
+  test "LRP Semantik Graf Sorgulama & Dolaylı İlişki Analizi (get_related_objects ve connected?)" do
+    assert {:ok, tenant} = LRP.create_tenant(%{name: "Twenty Graf Workspace"})
+
+    # Varlıkları Oluştur (Company, Person, Opportunity)
+    assert {:ok, comp} = LRP.create_object(%{tenant_id: tenant.id, type: "Company", name: "Acme Corp"})
+    assert {:ok, pers} = LRP.create_object(%{tenant_id: tenant.id, type: "Person", name: "John Doe"})
+    assert {:ok, opp} = LRP.create_object(%{tenant_id: tenant.id, type: "Opportunity", name: "Acme Big Deal"})
+    assert {:ok, unrelated} = LRP.create_object(%{tenant_id: tenant.id, type: "Company", name: "Unrelated LLC"})
+
+    # İlişkileri Kur (Company -> Person, Company -> Opportunity)
+    assert {:ok, _} = LRP.relate("Company", comp.id, "Person", pers.id, "has_contact")
+    assert {:ok, _} = LRP.relate("Company", comp.id, "Opportunity", opp.id, "has_opportunity")
+
+    # 1. get_related_objects doğrula
+    related_people = LRP.get_related_objects("Company", comp.id, "Person")
+    assert length(related_people) == 1
+    assert List.first(related_people).id == pers.id
+
+    related_opps = LRP.get_related_objects("Company", comp.id, "Opportunity")
+    assert length(related_opps) == 1
+    assert List.first(related_opps).id == opp.id
+
+    # 2. connected? BFS (Direct & Dolaylı yollar) doğrula
+    # Direct yol: Company -> Person (derinlik 1)
+    assert LRP.connected?(comp.id, pers.id, 1) == true
+
+    # Dolaylı yol: Person -> Company -> Opportunity (derinlik 2)
+    assert LRP.connected?(pers.id, opp.id, 2) == true
+    assert LRP.connected?(pers.id, opp.id, 1) == false # derinlik 1 yetersiz olmalı
+
+    # Bağımsız nesne testi
+    assert LRP.connected?(pers.id, unrelated.id, 3) == false
+  end
 end
+

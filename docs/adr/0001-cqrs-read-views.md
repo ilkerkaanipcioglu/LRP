@@ -36,3 +36,19 @@ Bu performans ve sorgu karmaşıklığı sorununu aşmak için **CQRS (Command Q
 
 *   **Olumlu:** Raporlama ve arama sorguları milisaniyeler içinde düz tablolar üzerinden dönecektir. AI ajanları şemayı kirletmeden esnek yazma yapmaya devam edebilir.
 *   **Negatif/Risk:** Nihai tutarlılık (eventual consistency) nedeniyle kullanıcı arayüzlerinde veya raporlarda çok kısa süreli (max 5sn) gecikmeler yaşanabilir. Bu durum UI katmanında optimistik güncellemelerle çözülecektir.
+
+---
+
+## 5. Consistency Contract (Tutarlılık Sözleşmesi)
+
+LRP'nin "strongly consistent write-path" ile "eventually consistent read-path" sınırlarını korumak amacıyla tüm operasyonlar aşağıdaki matrise tabidir:
+
+| Operasyon | Veri Kaynağı | Tutarlılık Seviyesi (Consistency) | Açıklama |
+|---|---|---|---|
+| **EVENT Yaz (Write)** | Write-Path (EAV DB) | Strong | Olay akışının doğruluğu için anlık ACID yazımı. |
+| **Webhook Payload (Outbound)** | EVENT anındaki full snapshot | Strong | Dış sisteme anlık iletilen durum, geri sorgu ihtiyacını yok eder. |
+| **OBJECT Oku (Genel Sorgu)** | Read Model / View | Eventual (≤ 5sn Gecikmeli) | Arama ve listeleme ekranları, milisaniyeler seviyesinde döner. |
+| **OBJECT Oku (Kritik İşlem)** | Write-Path (EAV DB) | Strong | Onaylama/finansal işlem anlarında `?consistency=strong` ile çağrılır. |
+| **Sürüm Geçmişi (Versioning)** | Write-Path (EAV DB) | Strong | `get_version_history/2` ve `compile_patch/2` daima doğrudan EAV sorgular. |
+| **OpenFGA Yetkilendirme** | OpenFGA Replica Cache | Best-Effort (Asenkron) | SQLite yerel tablosundan asenkron beslenen kopya. |
+

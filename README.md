@@ -122,6 +122,11 @@ lrp/
 | [ADR-0001](docs/adr/0001-cqrs-read-views.md) | CQRS Read Views (max 5s staleness) | Accepted, not yet implemented |
 | [ADR-0002](docs/adr/0002-json-patch-versioning.md) | JSON Patch deltas + 50-patch compaction | Accepted, not yet implemented |
 | [ADR-0003](docs/adr/0003-rebac-authorization.md) | ReBAC via OpenFGA | Accepted, not yet implemented |
+| [ADR-0004](docs/adr/0004-capability-provider-binding.md) | Capability/Provider/Binding — hot-swap provider pattern | Accepted, not yet implemented |
+| [ADR-0005](docs/adr/0005-migration-tracker.md) | MIGRATION_TRACKER — shadow/partial/primary/full_cutover | Accepted, not yet implemented |
+| [ADR-0006](docs/adr/0006-observation-mode.md) | OBSERVATION_MODE + MATURITY_SCORE — three onboarding scenarios | Accepted, not yet implemented |
+| [ADR-0007](docs/adr/0007-connector-contract.md) | Connector/Adapter contract + EVENT_SUBSCRIPTION outbound | Accepted, not yet implemented |
+| [ADR-0008](docs/adr/0008-modular-data-integration-topology.md) | Modular Data Integration Topology & Capability Extensibility | Accepted |
 
 ---
 
