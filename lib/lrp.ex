@@ -320,4 +320,46 @@ defmodule LRP do
     |> order_by([c], desc: c.inserted_at) 
     |> Repo.all()
   end
+
+  # ─── CLI / Dashboard API ────────────────────────────────────────────────────
+  @doc "Tüm tabloların kayıt sayısını tek sorguda döner. mix lrp.status ve MCP için."
+  def count_all do
+    %{
+      tenants:       Repo.aggregate(Tenant,       :count),
+      actors:        Repo.aggregate(Actor,        :count),
+      objects:       Repo.aggregate(Object,       :count),
+      events:        Repo.aggregate(Event,        :count),
+      relationships: Repo.aggregate(Relationship, :count),
+      versions:      Repo.aggregate(Version,      :count),
+      process_tasks: Repo.aggregate(ProcessTask,  :count),
+      agent_contexts: Repo.aggregate(AgentContext, :count)
+    }
+  end
+
+  @doc "Tüm tenant'ları döner."
+  def list_tenants, do: Repo.all(Tenant)
+
+  @doc "Bir tenant'a ait actor'ları döner."
+  def list_actors_by_tenant(tenant_id) do
+    Actor |> where(tenant_id: ^tenant_id) |> Repo.all()
+  end
+
+  @doc "ID ile tenant getirir."
+  def get_tenant(id), do: Repo.get(Tenant, id)
+
+  @doc "Bir tenant'a ait PROCESS_TASK sayısını duruma göre döner."
+  def count_process_tasks_by_tenant(tenant_id, status \\ nil) do
+    query = ProcessTask |> where(tenant_id: ^tenant_id)
+    query = if status, do: query |> where(status: ^status), else: query
+    Repo.aggregate(query, :count)
+  end
+
+  @doc "Son N event'i tenant bazında döner (CLI için)."
+  def list_recent_events(tenant_id, limit \\ 20) do
+    Event
+    |> where(tenant_id: ^tenant_id)
+    |> order_by([e], desc: e.occurred_at)
+    |> limit(^limit)
+    |> Repo.all()
+  end
 end

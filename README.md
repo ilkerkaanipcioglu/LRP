@@ -130,21 +130,73 @@ lrp/
 
 ---
 
-## Quickstart (PoC)
+## Quickstart
+
+### Tek Komutla Kur
 
 ```bash
+# Repoyu klonla
 git clone https://github.com/ilkerkaanipcioglu/LRP.git
 cd LRP
-mix deps.get
-mix test
+
+# Windows (PowerShell)
+./setup.ps1
+
+# Linux / macOS
+chmod +x setup.sh && ./setup.sh
 ```
 
-The integration test covers the full Object Graph flow:
+Setup betiği şunları yapar: Elixir kontrolü → `mix deps.get` → `mix ecto.migrate` → `mix lrp.seed`
+
+---
+
+### CLI Komutları
+
+```bash
+# Sistem durumu (insan)
+mix lrp.status
+
+# Sistem durumu (MCP / AI Agent)
+mix lrp.status --json
+
+# Uçtan uca canlı demo (5 dk — yatırımcı/müşteri için)
+mix lrp.demo
+
+# Tenant yönetimi
+mix lrp.tenant list
+mix lrp.tenant create --name "Şirket Adı"
+mix lrp.tenant create --name "X" --json   # MCP
+
+# Object sorgulama
+mix lrp.object list --tenant <id>
+mix lrp.object list --tenant <id> --type Document
+mix lrp.object get  --id <object_id>
+mix lrp.object list --tenant <id> --json  # MCP
+
+# Event akışı
+mix lrp.event list --tenant <id>
+mix lrp.event list --tenant <id> --limit 50
+mix lrp.event list --tenant <id> --json   # MCP
+
+# GitHub repo bağlama (SourceConnector)
+mix lrp.connect https://github.com/user/repo
+```
+
+---
+
+### Testler
+
+```bash
+mix test   # 8 entegrasyon testi
+```
+
+The integration tests cover:
 - Tenant + Actor creation
 - Multi-channel event logging (email, slack, agent-to-agent thread)
 - Folder/Case with attachments via Relationship graph
 - Two-commit version history (full snapshot)
 - Policy-based authorization (allow/deny)
+- Semantic graph BFS (`connected?/3`, `get_related_objects/3`)
 
 ---
 
