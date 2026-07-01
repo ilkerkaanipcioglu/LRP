@@ -108,9 +108,9 @@ defmodule Mix.Tasks.Lrp.Demo do
       tenant_id:         tenant.id,
       object_id:         fatura.id,
       assigned_actor_id: human.id,
-      name:              "Fatura Onayı — INV-DEMO-001",
-      status:            "pending",
-      priority:          "high"
+      process_name:      "Fatura Onayı — INV-DEMO-001",
+      state:             "pending_review",
+      status:            "pending"
     })
     ok("PROCESS_TASK → assigned: #{human.name}, status: #{H.yellow("pending")}")
     sleep()

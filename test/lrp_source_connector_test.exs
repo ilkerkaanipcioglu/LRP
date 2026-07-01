@@ -16,6 +16,7 @@ defmodule LRP.SourceConnectorTest do
   end
 
   @tag :external
+  @tag :integration
   @tag timeout: 30_000
   test "LRP reposunu kendine bağlar ve entity'leri keşfeder", %{tenant: tenant} do
     IO.puts("\n[SourceConnector] LRP reposuna bağlanıyor: #{@lrp_repo_url}")
@@ -63,6 +64,7 @@ defmodule LRP.SourceConnectorTest do
     IO.puts("[SourceConnector] ✅ #{stats.files_scanned} dosya tarandı, #{stats.entities_found} entity keşfedildi")
   end
 
+  @tag :integration
   @tag timeout: 60_000
   test "aynı repo aynı gün tekrar bağlanınca event idempotent kalır", %{tenant: tenant} do
     {:ok, first} = LRP.SourceConnector.connect(tenant.id, repo_url: @lrp_repo_url)
@@ -81,6 +83,7 @@ defmodule LRP.SourceConnectorTest do
   end
 
 
+  @tag :integration
   @tag timeout: 10_000
   test "geçersiz repo URL'si hata döner", %{tenant: tenant} do
     result = LRP.SourceConnector.connect(tenant.id, repo_url: "https://github.com/nobody/nonexistent-repo-xyz-123")

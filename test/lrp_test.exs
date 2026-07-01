@@ -1,7 +1,7 @@
 defmodule LRPTest do
   use ExUnit.Case, async: true
 
-  alias LRP.{Repo, Tenant, Actor, Object, Item, Relationship, Event, Policy, Version}
+  alias LRP.{Repo, Tenant, Actor, Object, Item, Relationship, Event, Policy, Version, ProcessTask}
   alias LRP.{AgentContext, AgentCapability}
 
   setup do
@@ -154,6 +154,29 @@ defmodule LRPTest do
     })
     assert LRP.authorize(agent.id, "Document", "commit") == :allow
     assert LRP.authorize(employee.id, "Document", "commit") == :deny
+
+    # 14. Process Task (Workflow CRUD & List)
+    assert {:ok, %ProcessTask{} = task} = LRP.create_process_task(%{
+      tenant_id: tenant.id,
+      process_name: "Sipariş Onay Süreci",
+      object_id: po_doc.id,
+      state: "draft",
+      assigned_actor_id: employee.id,
+      status: "pending"
+    })
+    assert task.process_name == "Sipariş Onay Süreci"
+    assert task.state == "draft"
+
+    assert {:ok, updated_task} = LRP.update_process_task(task, %{state: "approved", status: "completed"})
+    assert updated_task.state == "approved"
+    assert updated_task.status == "completed"
+
+    tasks = LRP.list_process_tasks_by_tenant(tenant.id)
+    assert length(tasks) == 1
+    assert hd(tasks).id == task.id
+
+    assert LRP.count_process_tasks_by_tenant(tenant.id, "completed") == 1
+    assert LRP.count_process_tasks_by_tenant(tenant.id, "pending") == 0
   end
 
   test "LRP Semantik Graf Sorgulama & Dolaylı İlişki Analizi (get_related_objects ve connected?)" do

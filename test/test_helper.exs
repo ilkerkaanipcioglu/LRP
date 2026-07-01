@@ -1,4 +1,4 @@
-ExUnit.start()
+ExUnit.start(exclude: [:integration])
 
 # Ensure repository directories exist
 File.mkdir_p!("priv/repo")
