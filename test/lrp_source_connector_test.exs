@@ -1,7 +1,10 @@
 defmodule LRP.SourceConnectorTest do
   use ExUnit.Case, async: false  # Gerçek GitHub API çağrısı — async: false
 
-  @moduletag :integration  # mix test --only integration ile çalıştır
+  # Network erişimi gerektirir:
+  #   mix test --only external
+  #   LRP_GITHUB_TOKEN=ghp_xxx mix test --only external
+  @moduletag :external
 
   # Gerçek LRP reposu — public, token gerektirmez
   @lrp_repo_url "https://github.com/ilkerkaanipcioglu/LRP"
@@ -12,6 +15,7 @@ defmodule LRP.SourceConnectorTest do
     {:ok, tenant: tenant}
   end
 
+  @tag :external
   @tag timeout: 30_000
   test "LRP reposunu kendine bağlar ve entity'leri keşfeder", %{tenant: tenant} do
     IO.puts("\n[SourceConnector] LRP reposuna bağlanıyor: #{@lrp_repo_url}")

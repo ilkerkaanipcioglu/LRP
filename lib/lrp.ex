@@ -362,4 +362,17 @@ defmodule LRP do
     |> limit(^limit)
     |> Repo.all()
   end
+
+  @doc "Tenant'a ait PROCESS_TASK'ları döner. status filtresi opsiyonel."
+  def list_process_tasks_by_tenant(tenant_id, status \\ nil) do
+    query = ProcessTask |> where(tenant_id: ^tenant_id)
+    query = if status, do: query |> where(status: ^status), else: query
+    query |> order_by([t], desc: t.inserted_at) |> Repo.all()
+  end
+
+  @doc "Bir process task'ı ID ile getirir."
+  def get_process_task(id), do: Repo.get(ProcessTask, id)
+
+  @doc "Tüm actor'ları döner."
+  def list_actors, do: Repo.all(Actor)
 end
