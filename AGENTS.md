@@ -92,14 +92,15 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 |---|---|---|---|
 | 1 | Çekirdek demo | `TENANT/ACTOR/OBJECT/EVENT` + basit inbox, tek akış uçtan uca | ✅ Done (v0.1) |
 | 2 | Agent-native temel | `idempotency_key`, `actor_confidence`, `reasoning_trace` | ✅ Done (v0.1) |
-| 3 | Onboarding iskeleti | Sihirbaz (sıfırdan/mevcut) + `MATURITY_SCORE` v0 | 🔲 Planned (ADR-0006) |
+| 3 | Onboarding iskeleti | Sihirbaz (sıfırdan/mevcut) + `MATURITY_SCORE` + CLI | ✅ Done (v0.1.5) |
 | 4 | Şema sadeleştirme | EAV kaldırıldı ✅, hız katmanı ikiye indi ✅ | ✅ Already aligned |
-| 5 | İlk gerçek entegrasyon | Tek Connector (Slack/e-posta) + insan onaylı sınıflandırma | 🔲 Planned (ADR-0007) |
-| 6 | Capability/Provider/Binding | Gerçek upgrade/downgrade ihtiyacı doğunca | 🔲 Planned (ADR-0004) |
-| 7 | MIGRATION_TRACKER | İkinci provider'a fiilen geçilmeye çalışıldığı gün | 🔲 Planned (ADR-0005) |
-| 8 | Embedding/semantic katman | Agent retrieval ihtiyacı somutlaşınca | 🔲 Planned |
-| 9 | Performans katmanı (Rust/NIF) | Yalnızca "Elixir burada yetersiz" ölçümle kanıtlandıktan sonra | 🔲 Phase 3 |
-| 10 | Web3/e-fatura/dış sistemler | Connector kontratı üzerinden, çekirdeğe dokunmadan, talep geldikçe | 🔲 On demand |
+| 5 | İlk gerçek entegrasyon | Tek Connector (Slack/e-posta) + insan onaylı sınıflandırma | ✅ Done (v0.1) |
+| 6 | Capability/Provider/Binding | Provider soyutlama ve dinamik hot-swap binding | ✅ Done (v0.1) |
+| 7 | MIGRATION_TRACKER | Geçiş aşamalarını (shadow -> cutover) izleyen tracker | ✅ Done (v0.1) |
+| 8 | Minimum Viable Ledger | VUK/IFRS defter, yevmiye, satır ve mali dönem kilitleri | ✅ Done (v0.1.5) |
+| 9 | Embedding/semantic katman | Agent retrieval ihtiyacı somutlaşınca | 🔲 Planned |
+| 10 | Performans katmanı (Rust/NIF) | Yalnızca "Elixir burada yetersiz" ölçümle kanıtlandıktan sonra | 🔲 Phase 3 |
+| 11 | Web3/dış sistemler | Connector kontratı üzerinden, çekirdeğe dokunmadan, talep geldikçe | 🔲 On demand |
 
 ---
 
@@ -116,7 +117,7 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 | 5 | `LRP.Relationship` | `relationships` | Semantik grafik kenarları (ReBAC temeli) |
 | 6 | `LRP.Version` | `versions` | Nesne revizyon geçmişi |
 
-### Agent-Native Uzantılar (v0.1'de Uygulanmış)
+### Genişletilmiş Uzantılar (Uygulanmış)
 
 | # | Modül | Tablo | Amaç |
 |---|---|---|---|
@@ -125,14 +126,21 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 | 9 | `LRP.ProcessTask` | `process_tasks` | İş akışı durum makinesi adımları |
 | 10 | `LRP.AgentContext` | `agent_contexts` | Ajan karar denetim kaydı |
 | 11 | `LRP.AgentCapability` | `agent_capabilities` | MCP-uyumlu araç kayıt defteri |
+| 12 | `LRP.ObservationMode` | `observation_modes` | Gölge izleme (ObservationMode) kayıtları |
+| 13 | `LRP.MaturityScore` | `maturity_scores` | Geçiş olgunluk (MaturityScore) kayıtları |
+| 14 | `LRP.Capability` | `capabilities` | Capability tanımları |
+| 15 | `LRP.Provider` | `providers` | Capability sağlayıcıları (provider) |
+| 16 | `LRP.ProviderBinding` | `provider_bindings` | Tenant bazlı aktif provider eşleşmeleri |
+| 17 | `LRP.MigrationTracker` | `migration_trackers` | Provider geçiş süreç takipçisi |
+| 18 | `LRP.Ledger` | `ledgers` | Muhasebe defteri (VUK / IFRS) |
+| 19 | `LRP.Journal` | `journals` | Yevmiye fişleri |
+| 20 | `LRP.JournalLine` | `journal_lines` | Yevmiye satırları |
+| 21 | `LRP.FiscalPeriod` | `fiscal_periods` | Mali dönem kilitleri |
 
 ### Planlanan Tablolar (Gerçek İhtiyaç Doğunca Eklenir)
 
 | Tablo | ADR | Tetikleyici |
 |---|---|---|
-| `CAPABILITY`, `PROVIDER`, `PROVIDER_BINDING` | ADR-0004 | İlk gerçek provider swap ihtiyacı |
-| `MIGRATION_TRACKER` | ADR-0005 | İkinci provider'a geçiş günü |
-| `OBSERVATION_MODE` | ADR-0006 | İlk müşteri onboarding |
 | `EVENT_SUBSCRIPTION` | ADR-0007 | İlk outbound event ihtiyacı |
 | `TASK` genişletmesi (`assignment_mode`, `reassignment_reason`, `previous_actor_id`) | ADR-0004 | Agent↔insan görev değişimi izleme |
 
@@ -152,9 +160,24 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 
 ## Key Commands
 
-```bash
-mix deps.get        # bağımlılıkları yükle
-mix ecto.create     # geliştirme veritabanı oluştur
-mix ecto.migrate    # migration'ları çalıştır
-mix test            # tüm testleri çalıştır
-```
+### Kurulum (Setup)
+- `.\setup.ps1` / `./setup.sh` - Elixir projeyi tek komutla baştan sona kurar ve demo verisini yükler.
+
+### Sistem Yönetim Tasks (CLI)
+- `mix lrp.status [--json]` - LRP sistem özetini (tablo kayıt sayılarını) raporlar.
+- `mix lrp.demo` - Canlı fatura onay iş akışı demosunu çalıştırır.
+- `mix lrp.seed` - Idempotent demo veri seti yükler.
+- `mix lrp.tenant list | create --name <ad> [--json]` - Tenant yönetimi.
+- `mix lrp.object list --tenant <id> [--type X] | get --id <id> [--json]` - Nesne sorguları.
+- `mix lrp.event list --tenant <id> [--limit N] [--json]` - Event akışı izleme.
+
+### Analiz & Gözlem (Shadow Mode)
+- `mix lrp.analyze --source <path|url> [--tenant <id>] [--json]` - Kod analiz skoru üretir ve PROCESS_TASK'ları yazar.
+- `mix lrp.tasks [--tenant <id>] [--pending] [--json]` - Bekleyen iş veya iyileştirme görevlerini listeler.
+- `mix lrp.observe --system <ad> --purpose <purpose> [--tenant <id>] [--json]` - Gölge izleme (ObservationMode) başlatır.
+- `mix lrp.maturity [--tenant <id>] [--json]` - Gölgedeki sistemin LRP geçiş olgunluğunu (MaturityScore) gösterir.
+
+### Altyapı
+- `mix deps.get` - Bağımlılıkları yükler.
+- `mix ecto.migrate` - Veritabanı migration'larını çalıştırır.
+- `mix test --exclude external` - Entegrasyon testlerini çalıştırır.
