@@ -43,5 +43,6 @@ ADR olmayan tasarım dokümanları doğrudan `docs/` klasörüne açıklayıcı 
 - [`docs/POSITIONING.md`](docs/POSITIONING.md) — Pazar Konumlandırması ve Rekabet Analizi (SAP, Odoo, Oracle, Microsoft Dynamics Çelişkileri)
 - [`docs/PLUGGABLE-APPLICATIONS.md`](docs/PLUGGABLE-APPLICATIONS.md) — Değişebilir Uygulamalar Prensibi (Pluggable Applications Principle)
 - [`docs/FRONTEND-STRATEGY.md`](docs/FRONTEND-STRATEGY.md) — Ön Yüz Stratejisi (Frontend Strategy - LiveView & Rust/WASM)
+- [`docs/MODERNIZER.md`](docs/MODERNIZER.md) — Eski Sistem Modernizasyon MVP Kullanım Kılavuzu (Legacy Modernizer Guide)
 
 - 🔴 **Software Engineering Principles**: Geliştirmeye başlamadan önce mutlaka [ENTERPRISE-ENGINEERING-PRINCIPLES.md](file:///B:/DEV/ENTERPRISE-ENGINEERING-PRINCIPLES.md) dosyasını okuyun, projenin tier seviyesini belirleyin ve kurallara uyun. Eğer bu kurallar dışında bir uygulama yapılacaksa bu durum `AGENTS.md` dosyasında belirtilmelidir; gerekirse `ENTERPRISE-ENGINEERING-PRINCIPLES.md` dosyası proje klasörüne kopyalanıp özelleştirilmiş bir versiyonu oluşturulabilir. Değişiklik küçükse sadece `AGENTS.md` dosyasında belirtilmesi yeterlidir.

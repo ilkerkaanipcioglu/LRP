@@ -123,6 +123,19 @@ defmodule LRP.Capability.Manager do
       ikey     = Keyword.get(opts, :idempotency_key,
                    "bind-#{capability_id}-#{new_provider_id}-#{System.system_time(:millisecond)}")
 
+      # Validation if new provider is an Elixir module implementing Plugin behaviour
+      if new_prov.provider_type == "elixir_module" do
+        module_name = Map.get(new_prov.provider_ref, "module") || Map.get(new_prov.provider_ref, :module)
+        module = resolve_module(module_name)
+
+        if module && Code.ensure_loaded?(module) and function_exported?(module, :validate_config, 2) do
+          case module.validate_config(cap.capability_type, new_prov.provider_ref) do
+            {:ok, _validated} -> :ok
+            {:error, reason} -> Repo.rollback("Configuration validation failed for plugin #{inspect(module)}: #{reason}")
+          end
+        end
+      end
+
       # Mevcut binding'i bul
       old_binding = Repo.get_by(ProviderBinding,
         tenant_id: cap.tenant_id,
@@ -272,24 +285,28 @@ defmodule LRP.Capability.Manager do
 
   defp dispatch_execution(_cap, %Provider{provider_type: "elixir_module"} = prov, function_name, arguments) do
     module_name = Map.get(prov.provider_ref, "module") || Map.get(prov.provider_ref, :module)
+    module = resolve_module(module_name)
     
-    if is_nil(module_name) do
-      {:error, :elixir_module_not_configured}
-    else
-      try do
-        module =
-          if is_atom(module_name) do
-            module_name
-          else
-            String.to_existing_atom("Elixir." <> module_name)
-          end
-          
-        fun = String.to_existing_atom(function_name)
-        {:ok, apply(module, fun, arguments)}
-      rescue
-        e ->
-          {:error, {:execution_failed, inspect(e)}}
-      end
+    cond do
+      is_nil(module) ->
+        {:error, :elixir_module_not_configured}
+
+      true ->
+        try do
+          # Prepend provider_ref (config) to arguments if it is a Plugin implementing validate_config/2
+          args =
+            if Code.ensure_loaded?(module) and function_exported?(module, :validate_config, 2) do
+              [prov.provider_ref | arguments]
+            else
+              arguments
+            end
+
+          fun = String.to_existing_atom(function_name)
+          {:ok, apply(module, fun, args)}
+        rescue
+          e ->
+            {:error, {:execution_failed, inspect(e)}}
+        end
     end
   end
 
@@ -390,6 +407,29 @@ defmodule LRP.Capability.Manager do
           name: "Capability Execution Context"
         })
         obj.id
+    end
+  end
+
+  defp resolve_module(module_name) do
+    cond do
+      is_nil(module_name) -> nil
+      is_atom(module_name) -> module_name
+      is_binary(module_name) ->
+        case String.starts_with?(module_name, "Elixir.") do
+          true ->
+            try do
+              String.to_existing_atom(module_name)
+            rescue
+              _ -> nil
+            end
+          false ->
+            try do
+              String.to_existing_atom("Elixir." <> module_name)
+            rescue
+              _ -> nil
+            end
+        end
+      true -> nil
     end
   end
 

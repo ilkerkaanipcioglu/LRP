@@ -43,10 +43,11 @@ defmodule LRP.Modernizer do
     - `:output_dir`  - Path where the generated design / code will be stored.
   """
   def modernize(source, opts \\ []) do
+    source     = String.replace(source, "\\", "/")
     target     = Keyword.get(opts, :target, "md")
-    output_dir = Keyword.get(opts, :output_dir, "docs/lrp-design")
+    output_dir = Keyword.get(opts, :output_dir, "docs/lrp-design") |> String.replace("\\", "/")
 
-    with {:ok, entities} <- scan_source(source),
+    with {:ok, entities} <- scan_source(source, opts),
          {:ok, generated_files} <- generate_design(entities, output_dir) do
       
       if target == "elixir" do
@@ -64,10 +65,10 @@ defmodule LRP.Modernizer do
 
   # ─── Source Scanning ────────────────────────────────────────────────────────
 
-  defp scan_source(source) do
+  defp scan_source(source, opts) do
     cond do
       github_url?(source) ->
-        scan_github(source)
+        scan_github(source, opts)
       File.dir?(source) ->
         scan_local(source)
       true ->
@@ -112,15 +113,12 @@ defmodule LRP.Modernizer do
     end
   end
 
-  defp scan_github(url) do
-    # For MVP, reuse LRP.SourceConnector's fetch tree if github URL is provided.
-    # If it fails (due to network or API limits), we fall back to a mock set or return error.
+  defp scan_github(url, opts) do
+    token = Keyword.get(opts, :token)
     case parse_repo_url(url) do
       {:ok, {_owner, _repo}} ->
-        # We try to use SourceConnector's private fetch tree or use default demo entities as fallback
-        case LRP.SourceConnector.connect("demo_tenant", repo_url: url) do
-          {:ok, %{entities: entities}} ->
-            names = Enum.map(entities, & &1.name)
+        case LRP.SourceConnector.scan_repo(url, token) do
+          {:ok, names} ->
             {:ok, names}
           _ ->
             # Fallback for offline/rate-limit scenarios in MVP
@@ -143,8 +141,10 @@ defmodule LRP.Modernizer do
   end
 
   defp is_schema_file?(path) do
+    basename = Path.basename(path) |> String.downcase()
     String.contains?(path, "migration") or
     String.contains?(path, "schema") or
+    basename in ["db.py", "models.py", "database.py"] or
     String.ends_with?(path, ".prisma") or
     String.ends_with?(path, "schema.sql") or
     String.ends_with?(path, "database.sql")

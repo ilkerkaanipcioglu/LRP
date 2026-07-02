@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Lrp.Modernize do
       --output-dir  Tasarım belgelerinin üretileceği dizin (varsayılan: `docs/lrp-design`)
   """
 
-  @switches [source: :string, target: :string, output_dir: :string]
+  @switches [source: :string, target: :string, output_dir: :string, token: :string]
 
   def run(args) do
     {opts, _, _} = OptionParser.parse(args, switches: @switches)
@@ -34,6 +34,7 @@ defmodule Mix.Tasks.Lrp.Modernize do
     unless source do
       IO.puts(H.red("❌ --source parametresi gereklidir."))
       IO.puts("   Örnek: mix lrp.modernize --source /path/to/legacy-app")
+      IO.puts("\n📖 Detaylı kılavuz ve yardım için: #{H.cyan("docs/MODERNIZER.md")}")
       System.halt(1)
     end
 
@@ -52,7 +53,7 @@ defmodule Mix.Tasks.Lrp.Modernize do
 
     IO.puts("🔍 Kaynak kod taranıyor ve entitiler keşfediliyor...")
 
-    case LRP.Modernizer.modernize(source, target: target, output_dir: output_dir) do
+    case LRP.Modernizer.modernize(source, opts) do
       {:ok, generated_files} ->
         IO.puts(H.green("\n✓ Modernizasyon çıktısı başarıyla üretildi!"))
         IO.puts("Üretilen Dosyalar:")

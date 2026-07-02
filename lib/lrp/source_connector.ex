@@ -58,6 +58,18 @@ defmodule LRP.SourceConnector do
   @github_api "https://api.github.com"
 
   @doc """
+  GitHub reposunu veritabanına yazmadan sadece tarar ve entity isimlerini döner.
+  """
+  def scan_repo(repo_url, token \\ nil) do
+    with {:ok, {owner, repo}} <- parse_repo_url(repo_url),
+         {:ok, _repo_meta}    <- fetch_repo_meta(owner, repo, token),
+         {:ok, file_tree}     <- fetch_file_tree(owner, repo, token),
+         {:ok, entities}      <- extract_entities(owner, repo, file_tree, token) do
+      {:ok, Enum.map(entities, & &1.name)}
+    end
+  end
+
+  @doc """
   Bir GitHub reposunu LRP'ye bağlar.
 
   ## Parametreler

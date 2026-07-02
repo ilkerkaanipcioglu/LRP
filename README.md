@@ -61,6 +61,7 @@ applications are built.
 | Onboarding & Observation | ✅ Done | wizard CLI + `ObservationMode` + `MaturityScore` (ADR-0006) implemented |
 | Source Connector | ✅ Done | Scans files and Git repos to map code architecture to LRP objects |
 | Code Compliance & Codegen | ✅ Done | AST parsers for Elixir/Python and AI-based code modifications/tests |
+| Legacy Modernizer MVP | ✅ Done | CLI task (`mix lrp.modernize`) to scan legacy codebases and generate LRP md specs or Elixir code ([Kılavuz](docs/MODERNIZER.md)) |
 | ReBAC / OpenFGA | 🔲 Planned | ADR-0003 accepted; static Policy table used for now |
 | CQRS Read Views | 🔲 Planned | ADR-0001 accepted; no consumers yet |
 | JSON Patch Versioning | 🔲 Planned | ADR-0002 accepted; full snapshot used today |
@@ -204,6 +205,10 @@ mix lrp.connect https://github.com/user/repo
 # md-only tasarımları koda yükseltme (Upgrade)
 mix lrp.upgrade --from=md-only --to=elixir
 mix lrp.upgrade --from=md-only --to=elixir --migrate
+
+# Legacy codebase modernizasyon (Modernize)
+mix lrp.modernize --source /path/to/legacy-app --target md
+mix lrp.modernize --source /path/to/legacy-app --target elixir --output-dir custom-design
 ```
 
 ---
@@ -233,5 +238,5 @@ The integration tests cover:
 | v0.3 | Ledger (VUK + IFRS Ecto + migrations, posting rules) | ✅ Done |
 | v0.4 | AI Router + Classifier | 🔲 Planned |
 | v0.5 | Agent Framework (governance_core integration) | 🔲 Planned |
-| v0.6 | Plugin SDK | 🔲 Planned |
+| v0.6 | Plugin SDK (Registry + validator + LocalStorage plugin) | ✅ Done |
 | v1.0 | Production Ready (GİB e-defter, SPK) | 🔲 Planned |

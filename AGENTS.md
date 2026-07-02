@@ -182,3 +182,22 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 - `mix deps.get` - Bağımlılıkları yükler.
 - `mix ecto.migrate` - Veritabanı migration'larını çalıştırır.
 - `mix test --exclude external` - Entegrasyon testlerini çalıştırır.
+
+---
+
+## Eklenti (Plugin) Mimarisi
+
+LRP, çalışma zamanında (runtime) değiştirilebilen ve harici eklentilerle (Google Drive, Activepieces, Windmill vb.) genişletilebilen pluggable bir yapıya sahiptir.
+
+### 1. Eklenti Geliştirme Prensibi
+Bir eklenti geliştirmek için:
+- Eklenti modülü `LRP.Plugin` behaviour'ını implemente etmelidir.
+- Desteklediği capability türünü (`supported_capabilities/0`) belirtmeli ve bunun için konfigürasyon doğrulaması (`validate_config/2`) sunmalıdır.
+- Çalışma zamanında eklentinin fonksiyonu çağrıldığında, ilk parametre olarak o provider'a ait konfigürasyon veri tabanından okunup otomatik olarak enjekte edilir (`args = [config | arguments]`).
+
+### 2. Otomatik Keşif ve Kayıt (Registry)
+Sistem ayağa kalktığında yüklenmiş tüm eklenti modüllerini dinamik olarak keşfeder. Belirli bir tenant için eklentileri kaydetmek için:
+```elixir
+LRP.Plugin.Registry.register_all(tenant_id)
+```
+Bu işlem otomatik olarak ilgili capability ve standby provider kayıtlarını oluşturur. Konfigürasyon doğrulaması geçemeyen bir provider'ın aktif olarak atanması (`bind/4`) durumunda veritabanı işlemi otomatik olarak geri alınır (rollback).
