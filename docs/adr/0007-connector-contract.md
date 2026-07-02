@@ -1,7 +1,7 @@
 # ADR-0007: Standart Connector/Adapter Kontratı + EVENT_SUBSCRIPTION Outbound
 
 - **Tarih**: 2026-06-30
-- **Durum**: Kabul edildi, henüz uygulanmadı
+- **Durum**: Uygulandı
 - **Kaynak**: [LRP-Mimari-v2-Protokol.md § 8](../LRP-Mimari-v2-Protokol.md)
 
 ---

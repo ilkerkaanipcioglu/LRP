@@ -1,7 +1,7 @@
 # ADR-0006: OBSERVATION_MODE + MATURITY_SCORE — Üç Onboarding Senaryosu
 
 - **Tarih**: 2026-06-30
-- **Durum**: Kabul edildi, henüz uygulanmadı
+- **Durum**: Uygulandı
 - **Kaynak**: [LRP-Mimari-v2-Protokol.md § 6–7](../LRP-Mimari-v2-Protokol.md)
 
 ---

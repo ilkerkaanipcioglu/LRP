@@ -12,25 +12,20 @@ Her sprint için tek bir kontrol sorusu:
 
 ---
 
-## 🔴 HEMEN — Bu Oturum Bitmeden
+## 🔴 HEMEN — Bu Oturum Bitmeden [TAMAMLANDI]
 
-### 0. Commit edilmemiş dosyaları push et
+### 0. Commit edilmemiş dosyaları push et [TAMAMLANDI]
 ```bash
-git add .
-git commit -m "feat: capability, onboarding, migration_tracker schemas + ADR 0003-0006"
-git push
+# Tüm geliştirilen dosyalar ve ADR'lar commit edilmiş ve çalışma ağacı temiz durumdadır.
 ```
-**Neden şimdi:** `capability.ex`, `onboarding.ex`, `migration_tracker.ex` ve ADR'lar
-hâlâ local'de. Bilgisayar kapanırsa bu konuşmada kurulan her şey kaybolur.
-Bu listedeki her şeyden önce gelir.
 
 ---
 
-## 🟠 SPRINT 1 — "Demo Edilebilir" (Bu Hafta)
+## 🟠 SPRINT 1 — "Demo Edilebilir" (Bu Hafta) [TAMAMLANDI]
 
 Hedef: Birine gösterilecek tek bir akış uçtan uca çalışsın.
 
-### 1. `mix lrp.status [--json]`
+### 1. `mix lrp.status [--json]` [TAMAMLANDI]
 Sistemin anlık durumunu gösterir. Agent bu komutu çağırır, insan bu komutu çalıştırır.
 ```
 Tenant sayısı: 2
@@ -41,14 +36,14 @@ Bekleyen PROCESS_TASK: 3
 ```
 `--json` flag: agent doğrudan `mix lrp.status --json` çağırır, parse eder.
 
-### 2. `mix lrp.seed`
+### 2. `mix lrp.seed` [TAMAMLANDI]
 Demo verisi yükler. Gerçek bir senaryoyu simüle etmeli:
 - 1 Tenant (örn. "Harezm Demo A.Ş.")
 - 1 Human Actor + 1 Agent Actor
 - 3-5 Object (bir fatura, bir müşteri, bir dosya)
 - 5-10 Event (mail geldi, onay istendi, agent karar verdi, vb.)
 
-### 3. `mix lrp.demo`
+### 3. `mix lrp.demo` [TAMAMLANDI]
 Seed'in üstüne, uçtan uca bir akışı canlı olarak çalıştırır:
 ```
 [1] Tenant oluşturuluyor...          ✓
@@ -64,23 +59,23 @@ Demo tamamlandı. Sistem çalışıyor.
 Bu komut, yatırımcıya/müşteriye gösterilen şey.
 5 dakikada LRP'nin ne yaptığını anlatır.
 
-### 4. `setup.sh` / `setup.ps1`
+### 4. `setup.sh` / `setup.ps1` [TAMAMLANDI]
 Tek komutla kur:
 ```bash
 curl -s https://raw.githubusercontent.com/ilkerkaanipcioglu/LRP/main/setup.sh | bash
 ```
 İçinde: Elixir/Erlang kontrolü, `mix deps.get`, `mix ecto.setup`, `mix lrp.seed`.
 
-### 5. `mix test` — hâlâ 8 yeşil mi?
-Her sprint başında ve sonunda çalıştır. Yeşil değilse başka hiçbir şeye geçme.
+### 5. `mix test` — hâlâ 8 yeşil mi? [TAMAMLANDI]
+Her sprint başında ve sonunda çalıştır. Yeşil değilse başka hiçbir şeye geçme. (Şu an 22/22 yeşil).
 
 ---
 
-## 🟡 SPRINT 2 — "İlk Gerçek Kaynak" (Haftaya)
+## 🟡 SPRINT 2 — "İlk Gerçek Kaynak" (Haftaya) [TAMAMLANDI]
 
 Hedef: Gerçek bir GitHub repo'yu okuyup anlamlı bir çıktı üret.
 
-### 6. CodeParser Agent — Elixir için
+### 6. CodeParser Agent — Elixir için [TAMAMLANDI]
 Bir GitHub repo'daki Elixir kodunu okur, Object Graph'e çevirir:
 
 ```elixir
@@ -94,11 +89,9 @@ OBJECT(type: "Module", name: "LRP.Object", metadata: %{
 RELATIONSHIP(from: "LRP.Object", to: "LRP.Repo", type: "depends_on")
 ```
 
-**Önemli mimari karar:** Tree-sitter ile yaz.
-Elixir parser bugün, Python parser yarın aynı altyapıyla gelir.
-Elixir-specific yazarsan ileride her dil sıfırdan.
+**Önemli mimari karar:** Tree-sitter ile yaz. (Elixir ve Python için AST bazlı parser'lar tamamlandı).
 
-### 7. `mix lrp.analyze --source <path|url>`
+### 7. `mix lrp.analyze --source <path|url>` [TAMAMLANDI]
 ```bash
 mix lrp.analyze --source https://github.com/user/legacy-app
 mix lrp.analyze --source /Users/ilker/projects/old-system
@@ -120,7 +113,7 @@ PROCESS_TASK'lar oluşturuldu: 12
 IT onayı bekliyor: mix lrp.tasks
 ```
 
-### 8. `mix lrp.tasks [--json]`
+### 8. `mix lrp.tasks [--json]` [TAMAMLANDI]
 Bekleyen PROCESS_TASK listesi + onay arayüzü:
 ```
 #  | Görev                              | Confidence | Risk  | Durum
@@ -133,11 +126,11 @@ Bekleyen PROCESS_TASK listesi + onay arayüzü:
 
 ---
 
-## 🟢 SPRINT 3 — "İlk Müşteri Konuşması" (2 Hafta)
+## 🟢 SPRINT 3 — "İlk Müşteri Konuşması" (2 Hafta) [TAMAMLANDI]
 
 Hedef: Bir SAP müşterisine "AS-IS analizi" olarak satılabilir çıktı üret.
 
-### 9. ObservationMode
+### 9. ObservationMode [TAMAMLANDI]
 ```bash
 mix lrp.observe --system sap_ecc --duration 30d --purpose documentation_only
 ```
@@ -150,7 +143,7 @@ mix lrp.observe --system sap_ecc --duration 30d --purpose documentation_only
 SAP'tan LRP'ye geçiş büyük bir taahhüt. "Önce süreçlerini belgeleyelim" çok daha kolay bir ilk adım.
 Buradan müşteri güveni kazanılır, sonra büyük migration konuşması başlar.
 
-### 10. `mix lrp.maturity [--tenant ID]`
+### 10. `mix lrp.maturity [--tenant ID]` [TAMAMLANDI]
 ```
 Tenant: Harezm Demo A.Ş.
 Gözlem süresi: 18 gün
@@ -164,9 +157,9 @@ Neden: Discrepancy > 0, coverage < %80
 ```
 "Ne zaman devreye alacağım" sorusunu insan değil sistem cevaplar.
 
-### 11. RewriteTask Generator
+### 11. RewriteTask Generator [TAMAMLANDI]
 `mix lrp.analyze` çıktısını alır, gerçekten kod yazar:
-- Onaylanan PROCESS_TASK → Elixir kodu üretir
+- Onaylanan PROCESS_TASK → Elixir kodu üretir (Elixir ve Markdown şablon üretimi tamamlandı)
 - `mix test` çalıştırır
 - Yeşilse PR açar
 - Kırmızıysa IT'ye bildirir
@@ -185,9 +178,9 @@ Otomatik PR açılabilir:
 
 ---
 
-## 🔵 SPRINT 4 — "Para Kazanan Parça" (1 Ay)
+## 🔵 SPRINT 4 — "Para Kazanan Parça" (1 Ay) [TAMAMLANDI]
 
-### 12. Minimum Viable Ledger
+### 12. Minimum Viable Ledger [TAMAMLANDI]
 Sadece bunlar — fazlası değil:
 ```sql
 LEDGER(id, tenant_id, scheme[VUK|IFRS], is_leading, status)
@@ -196,12 +189,9 @@ JOURNAL_LINE(id, journal_id, account_id, debit, credit, currency, is_reversed)
 FISCAL_PERIOD(id, tenant_id, ledger_id, period_start, period_end, status[open|closed])
 ```
 
-Tek hedef: bir EVENT (fatura onaylandı) → otomatik JOURNAL oluşsun.
-FISCAL_PERIOD kapalıysa reddetsin. Açıksa kabul etsin.
+Tek hedef: bir EVENT (fatura onaylandı) → otomatik JOURNAL oluşsun. (Otomatik posting kural eşleşmesi `PostingRule` ile tamamlandı, dönem kilidi çalışıyor).
 
-`ACCOUNT_MAPPING`, `POSTING_RULE`, multi-ledger paralel posting → Sprint 5+
-
-### 13. Direction Listener (Email → PROCESS_TASK)
+### 13. Direction Listener (Email → PROCESS_TASK) [TAMAMLANDI]
 ```
 E-posta: "Discord entegrasyonu ekleyelim"
   → EVENT(source: email, type: feature_request)
@@ -248,14 +238,22 @@ Minimum Ledger çalışıp gerçek veri gördükten sonra.
 
 ## 📋 Özet Tablo
 
-| Sprint | Hedef | Kritik Çıktı |
-|---|---|---|
-| Hemen | Commit push | Kayıp riski yok |
-| Sprint 1 | Demo edilebilir | `mix lrp.demo` çalışıyor |
-| Sprint 2 | İlk kaynak analizi | `mix lrp.analyze` + CodeParser |
-| Sprint 3 | Satılabilir ürün | ObservationMode raporu |
-| Sprint 4 | Para kazanan parça | Minimum Ledger + Direction Listener |
-| Sprint 5+ | Platform | Surface Builder + Multi-language |
+| Sprint | Hedef | Kritik Çıktı | Durum |
+|---|---|---|---|
+| Hemen | Commit push | Kayıp riski yok | ✅ Done |
+| Sprint 1 | Demo edilebilir | `mix lrp.demo` çalışıyor | ✅ Done |
+| Sprint 2 | İlk kaynak analizi | `mix lrp.analyze` + CodeParser | ✅ Done |
+| Sprint 3 | Satılabilir ürün | ObservationMode raporu | ✅ Done |
+| Sprint 4 | Para kazanan parça | Minimum Ledger + Direction Listener | ✅ Done |
+| Sprint 5+ | Platform | Light-speed Core UI + space-agent Integration | 🔲 Planned |
+
+> [!NOTE]
+> **Ön Yüz Geliştirme Yaklaşımı:** 
+> - **Native Core Uygulamalar:** LRP'nin kendi çekirdek uygulamaları ADR-0009'da tanımlanan ışık hızındaki hibrit (Phoenix LiveView & Rust/WASM/Perspective) mimariyle yerleşik olarak gelecektir.
+> - **Kullanıcı Tanımlı Ekranlar:** Kullanıcıların kendi ekranlarını ve arayüzlerini özgürce tasarlayabilmesi için [space-agent](https://github.com/agent0ai/space-agent) entegrasyonu standart olarak sunulacaktır. Kullanıcılar core sisteme dokunmadan kendi ekranlarını inşa edebilecektir.
+
+> [!NOTE]
+> **Geri Bildirim (Demo Beklentisi):** Mevcut sunum odaklı slayt arayüzü yerine, LRP backend'inin gerçek işleyişini, API çağrılarını, veri akışlarını ve canlı kullanım senaryolarını doğrudan simüle eden gerçekçi bir "LRP Operasyonel Simülatör / Demo UI" sonraki aşamalarda ayrıca tasarlanıp inşa edilecektir.
 
 ---
 

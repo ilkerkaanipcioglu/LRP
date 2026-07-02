@@ -23,7 +23,13 @@ defmodule LRP do
 
   # ─── Object API ─────────────────────────────────────────────────────────────
   def create_object(attrs) do
-    %Object{} |> Object.changeset(attrs) |> Repo.insert()
+    case %Object{} |> Object.changeset(attrs) |> Repo.insert() do
+      {:ok, object} ->
+        LRP.ReadModel.trigger_async_sync(object.id)
+        {:ok, object}
+      error ->
+        error
+    end
   end
 
   def get_object(id), do: Repo.get(Object, id)
@@ -36,12 +42,24 @@ defmodule LRP do
   end
 
   def update_object(%Object{} = object, attrs) do
-    object |> Object.changeset(attrs) |> Repo.update()
+    case object |> Object.changeset(attrs) |> Repo.update() do
+      {:ok, updated} ->
+        LRP.ReadModel.trigger_async_sync(updated.id)
+        {:ok, updated}
+      error ->
+        error
+    end
   end
 
   # ─── Item API ───────────────────────────────────────────────────────────────
   def create_item(attrs) do
-    %Item{} |> Item.changeset(attrs) |> Repo.insert()
+    case %Item{} |> Item.changeset(attrs) |> Repo.insert() do
+      {:ok, item} ->
+        LRP.ReadModel.trigger_async_sync(item.object_id)
+        {:ok, item}
+      error ->
+        error
+    end
   end
 
   # ─── Relationships API ──────────────────────────────────────────────────────
@@ -54,7 +72,14 @@ defmodule LRP do
       relationship_type: relationship_type,
       valid_from: DateTime.utc_now()
     }
-    %Relationship{} |> Relationship.changeset(attrs) |> Repo.insert()
+    case %Relationship{} |> Relationship.changeset(attrs) |> Repo.insert() do
+      {:ok, rel} ->
+        if to_string(from_entity) == "Object", do: LRP.ReadModel.trigger_async_sync(from_id)
+        if to_string(to_entity) == "Object", do: LRP.ReadModel.trigger_async_sync(to_id)
+        {:ok, rel}
+      error ->
+        error
+    end
   end
 
   def list_relationships(from_entity, from_id, relationship_type \\ nil) do
@@ -261,6 +286,11 @@ defmodule LRP do
     |> where(object_id: ^object_id)
     |> order_by([desc: :committed_at, desc: :inserted_at])
     |> Repo.all()
+  end
+
+  # ─── ReBAC & Access Control API (ADR-0003) ──────────────────────────────────
+  def check_permission(actor_id, relation, object_id) do
+    LRP.Authorization.check_permission(actor_id, relation, object_id)
   end
 
   # ─── Policy & Authorization API ─────────────────────────────────────────────
@@ -592,6 +622,14 @@ defmodule LRP do
         {:error, :invalid_amount}
       end
     end)
+  end
+  # ─── CQRS Read Model API (ADR-0001) ──────────────────────────────────────────
+  def list_read_objects(tenant_id, type \\ nil) do
+    LRP.ReadModel.list_objects(tenant_id, type)
+  end
+
+  def sync_read_model(object_id) do
+    LRP.ReadModel.sync_object(object_id)
   end
 end
 

@@ -119,7 +119,20 @@ defmodule LRP.Codegen.MdOnly do
       |> Enum.map(fn {fn_name, fn_desc} -> "- `#{fn_name}` → #{fn_desc}" end)
       |> Enum.join("\n")
 
+    yaml_interface =
+      interface
+      |> Enum.map(fn {fn_name, fn_desc} -> "  #{fn_name}: \"#{fn_desc}\"" end)
+      |> Enum.join("\n")
+
     """
+    ---
+    capability: #{capability_type}
+    description: "#{desc}"
+    created_at: #{date}
+    interface_contract:
+    #{yaml_interface}
+    ---
+
     # CAPABILITY: #{capability_type}
 
     > **Bu dosya bir md-only tasarım belgesidir — henüz kod üretilmemiştir.**
@@ -188,6 +201,16 @@ defmodule LRP.Codegen.MdOnly do
       end
 
     """
+    ---
+    provider: #{capability_type}-#{provider_type}
+    capability: #{capability_type}
+    provider_type: #{provider_type}
+    created_at: #{date}
+    version: v1.0.0
+    status: standby
+    upgrade_to: #{upgrade_to || "null"}
+    ---
+
     # PROVIDER: #{capability_type} / #{provider_type}
 
     > **Bu dosya bir md-only tasarım belgesidir.**

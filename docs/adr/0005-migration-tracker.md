@@ -1,7 +1,7 @@
 # ADR-0005: MIGRATION_TRACKER — Geçiş Sürecini İzleyen Katman
 
 - **Tarih**: 2026-06-30
-- **Durum**: Kabul edildi, henüz uygulanmadı
+- **Durum**: Uygulandı
 - **Kaynak**: [LRP-Mimari-v2-Protokol.md § 5](../LRP-Mimari-v2-Protokol.md)
 
 ---

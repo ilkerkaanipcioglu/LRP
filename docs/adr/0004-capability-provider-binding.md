@@ -1,7 +1,7 @@
 # ADR-0004: Capability/Provider/PROVIDER_BINDING — Hot-Swap Provider Pattern
 
 - **Tarih**: 2026-06-30
-- **Durum**: Kabul edildi, henüz uygulanmadı
+- **Durum**: Uygulandı
 - **Kaynak**: [LRP-Mimari-v2-Protokol.md § 4](../LRP-Mimari-v2-Protokol.md)
 
 ---

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRP — İnteraktif Sunum ve Canlı Demo</title>
+    <!-- Outfit Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="glow-bg-secondary"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand-header">
+                <div class="logo-box">
+                    <i class="fa-solid fa-microchip logo-icon"></i>
+                </div>
+                <div>
+                    <h1 class="brand-title">LRP Engine</h1>
+                    <p class="brand-subtitle">AI-Native OS</p>
+                </div>
+            </div>
+
+            <nav class="nav-steps">
+                <div class="nav-item active" data-step="1">
+                    <span class="step-num">01</span>
+                    <span class="step-text">Vizyon & Giriş</span>
+                    <i class="fa-solid fa-chevron-right step-arrow"></i>
+                </div>
+                <div class="nav-item" data-step="2">
+                    <span class="step-num">02</span>
+                    <span class="step-text">Legacy ERP Analizi</span>
+                    <i class="fa-solid fa-chevron-right step-arrow"></i>
+                </div>
+                <div class="nav-item" data-step="3">
+                    <span class="step-num">03</span>
+                    <span class="step-text">Core 6 Tablo & Graf</span>
+                    <i class="fa-solid fa-chevron-right step-arrow"></i>
+                </div>
+                <div class="nav-item" data-step="4">
+                    <span class="step-num">04</span>
+                    <span class="step-text">Event Stream (Log)</span>
+                    <i class="fa-solid fa-chevron-right step-arrow"></i>
+                </div>
+                <div class="nav-item" data-step="5">
+                    <span class="step-num">05</span>
+                    <span class="step-text">Çift Taraflı Defter</span>
+                    <i class="fa-solid fa-chevron-right step-arrow"></i>
+                </div>
+                <div class="nav-item" data-step="6">
+                    <span class="step-num">06</span>
+                    <span class="step-text">Ajan Açıklanabilirliği</span>
+                    <i class="fa-solid fa-chevron-right step-arrow"></i>
+                </div>
+                <div class="nav-item" data-step="7">
+                    <span class="step-num">07</span>
+                    <span class="step-text">Pluggable Apps</span>
+                    <i class="fa-solid fa-chevron-right step-arrow"></i>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <span class="status-indicator online"></span>
+                    <span>LRP Engine v0.1.5 — Online</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="workspace">
+            <header class="workspace-header">
+                <div class="step-indicator-bubble">Adım <span id="current-step-bubble">1</span> / 7</div>
+                <div class="workspace-actions">
+                    <button class="btn btn-secondary" id="btn-prev" disabled>
+                        <i class="fa-solid fa-arrow-left"></i> Geri
+                    </button>
+                    <button class="btn btn-primary" id="btn-next">
+                        İleri <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-viewport">
+                <!-- Slide 1: Welcome & Vision -->
+                <section class="slide-content active" id="slide-1">
+                    <div class="slide-header">
+                        <span class="slide-tagline">Giriş & Temel Vizyon</span>
+                        <h2 class="slide-title">İşletim Sistemleri Değişiyor: <span class="text-glow">LRP</span></h2>
+                    </div>
+
+                    <div class="vision-quote">
+                        <i class="fa-solid fa-quote-left quote-icon"></i>
+                        <p class="quote-text">
+                            "An AI-native Enterprise Operating System where every business object is an entity, every change is an event, every workflow is explainable, and every decision can be delegated to humans or AI agents."
+                        </p>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="card glass-card">
+                            <h3 class="card-title"><i class="fa-solid fa-cubes-stacked text-purple"></i> ERP Bir Yazılım Değildir</h3>
+                            <p class="card-text">
+                                Geleneksel ERP'ler statik veritabanı tabloları ve birbirine sıkı sıkıya bağlı modüllerden ibarettir. LRP ise işletmeyi bir <strong>bilgi grafı (knowledge graph)</strong> olarak modeller. Her şey ya bir varlık (Entity) ya da bir olaydır (Event).
+                            </p>
+                        </div>
+                        <div class="card glass-card">
+                            <h3 class="card-title"><i class="fa-solid fa-robot text-cyan"></i> Ajan-Native Mimari</h3>
+                            <p class="card-text">
+                                LRP'de yapay zeka ajanları sisteme sonradan yapıştırılmış birer eklenti değildir. AI Agent'lar, `ACTOR` tablosunda insanlar ile aynı seviyede birinci sınıf vatandaşlardır. İş akışlarını yorumlar, kararlarını denetim izine yazar.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Slide 2: Competitor Failures -->
+                <section class="slide-content" id="slide-2">
+                    <div class="slide-header">
+                        <span class="slide-tagline">Legacy ERP Analizi</span>
+                        <h2 class="slide-title">Devlerin Çuvalladığı Yerler & <span class="text-glow">LRP</span></h2>
+                    </div>
+
+                    <div class="tabs-container">
+                        <div class="tabs-header">
+                            <button class="tab-btn active" data-tab="sap">SAP</button>
+                            <button class="tab-btn" data-tab="odoo">Odoo</button>
+                            <button class="tab-btn" data-tab="oracle">Oracle</button>
+                            <button class="tab-btn" data-tab="dynamics">Dynamics</button>
+                        </div>
+                        <div class="tabs-content">
+                            <!-- SAP -->
+                            <div class="tab-pane active" id="tab-sap">
+                                <div class="grid grid-2">
+                                    <div class="pane-column red-border">
+                                        <h4 class="pane-subtitle"><i class="fa-solid fa-triangle-exclamation text-red"></i> SAP Nerede Hatalı?</h4>
+                                        <ul class="failure-list">
+                                            <li><strong>Kurulum = 18 Ay Proje:</strong> Bitmeyen ABAP özelleştirmeleri ve danışmanlık maliyetleri.</li>
+                                            <li><strong>Şema Katılığı:</strong> Tek bir sütun eklemek enhancement spot'lar ve downtime gerektirir.</li>
+                                            <li><strong>Ayrı Raporlama (BW):</strong> Operasyonel veri ile analiz verisi ayrı sunucularda, ETL ile beslenir.</li>
+                                        </ul>
+                                    </div>
+                                    <div class="pane-column green-border">
+                                        <h4 class="pane-subtitle"><i class="fa-solid fa-circle-check text-green"></i> LRP Çözümü</h4>
+                                        <ul class="solution-list">
+                                            <li><strong>5 Dakikada Hazır:</strong> Tek betikle anında ayağa kalkar, demo çalışır.</li>
+                                            <li><strong>metadata (JSONB):</strong> Şema değişikliği, deploy ve migration gerektirmeden dinamik alanlar.</li>
+                                            <li><strong>Dahili CQRS:</strong> Raporlama flat materialized view'dan sıfır join ile çekilir.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Odoo -->
+                            <div class="tab-pane" id="tab-odoo">
+                                <div class="grid grid-2">
+                                    <div class="pane-column red-border">
+                                        <h4 class="pane-subtitle"><i class="fa-solid fa-triangle-exclamation text-red"></i> Odoo Nerede Hatalı?</h4>
+                                        <ul class="failure-list">
+                                            <li><strong>Modüller Birbirini Bozar:</strong> Bir modül güncellemesi tüm sistemi ve özelleştirmeleri kırabilir.</li>
+                                            <li><strong>Python ORM Yavaşlığı:</strong> Karmaşık sorgularda veritabanını tıkayan SQL'ler üretir.</li>
+                                            <li><strong>Güvensiz İzolasyon:</strong> Şirket izolasyonları veritabanında değil, kod katmanında filtrelerle yapılır.</li>
+                                        </ul>
+                                    </div>
+                                    <div class="pane-column green-border">
+                                        <h4 class="pane-subtitle"><i class="fa-solid fa-circle-check text-green"></i> LRP Çözümü</h4>
+                                        <ul class="solution-list">
+                                            <li><strong>Modülsüz Mimarî:</strong> Her şey generic `OBJECT`/`RELATIONSHIP` yapısındadır.</li>
+                                            <li><strong>CQRS Listeler:</strong> Listeleme ekranları doğrudan düz tablolardan join'siz okunur.</li>
+                                            <li><strong>PostgreSQL RLS:</strong> İzolasyon doğrudan veritabanı motoru seviyesinde zorlanır.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Oracle -->
+                            <div class="tab-pane" id="tab-oracle">
+                                <div class="grid grid-2">
+                                    <div class="pane-column red-border">
+                                        <h4 class="pane-subtitle"><i class="fa-solid fa-triangle-exclamation text-red"></i> Oracle Nerede Hatalı?</h4>
+                                        <ul class="failure-list">
+                                            <li><strong>Lisans Silahı:</strong> Core lisansları ve karmaşık audit'lerle gizli cezalandırmalar.</li>
+                                            <li><strong>Bulutta Lift & Shift:</strong> Eski monolitik yapıları modernize etmeden sadece sanal makinede çalıştırma.</li>
+                                            <li><strong>Pahalı Middleware:</strong> Sistemleri bağlamak için Oracle SOA Suite bağımlılığı.</li>
+                                        </ul>
+                                    </div>
+                                    <div class="pane-column green-border">
+                                        <h4 class="pane-subtitle"><i class="fa-solid fa-circle-check text-green"></i> LRP Çözümü</h4>
+                                        <ul class="solution-list">
+                                            <li><strong>Açık Kaynak Çekirdek:</strong> Özgür altyapı, yapay lisans duvarları yoktur.</li>
+                                            <li><strong>Cloud-Native BEAM:</strong> Dağıtık ve event-driven çekirdek her bulutta yerel çalışır.</li>
+                                            <li><strong>CONNECTOR Kontratı:</strong> Herhangi bir dış sisteme doğrudan standart kontratla bağlanır.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Dynamics -->
+                            <div class="tab-pane" id="tab-dynamics">
+                                <div class="grid grid-2">
+                                    <div class="pane-column red-border">
+                                        <h4 class="pane-subtitle"><i class="fa-solid fa-triangle-exclamation text-red"></i> Dynamics Nerede Hatalı?</h4>
+                                        <ul class="failure-list">
+                                            <li><strong>Excel Kardeşliği:</strong> Dynamics'in zihinsel modeli hâlâ tablo/satır/sütundur.</li>
+                                            <li><strong>Power Platform Kısıtı:</strong> Low-code akışlar tamamen Microsoft ekosistemine kilitlenir.</li>
+                                            <li><strong>Teams Bağımlılığı:</strong> Bildirimlerin tek bir iletişim kanalına sıkı bağlılığı.</li>
+                                        </ul>
+                                    </div>
+                                    <div class="pane-column green-border">
+                                        <h4 class="pane-subtitle"><i class="fa-solid fa-circle-check text-green"></i> LRP Çözümü</h4>
+                                        <ul class="solution-list">
+                                            <li><strong>Graf-First:</strong> İlişkiler (`RELATIONSHIP`) graf tabanlı birinci sınıf vatandaştır.</li>
+                                            <li><strong>Açık Standart Ekranlar:</strong> Surface Builder JSON/LiveView tabanlıdır, lock-in yoktur.</li>
+                                            <li><strong>CONNECTOR Hot-Swap:</strong> Slack, Telegram, Teams, email core etkilenmeden takılıp çıkarılabilir.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Slide 3: Core 6 Tables & Graph -->
+                <section class="slide-content" id="slide-3">
+                    <div class="slide-header">
+                        <span class="slide-tagline">Veri Omurgası</span>
+                        <h2 class="slide-title">LRP Çekirdek Grafı ve <span class="text-glow">Core 6 Tablo</span></h2>
+                    </div>
+
+                    <div class="grid grid-3-5">
+                        <div class="card glass-card">
+                            <h4 class="card-subtitle">Şema Esnekliği</h4>
+                            <p class="card-text text-sm">
+                                LRP'de `customers`, `invoices`, `products` adında tablolar yoktur. Her şey jenerik `OBJECT` ve bu nesneleri birbirine bağlayan `RELATIONSHIP` tablosundan oluşur.
+                            </p>
+                            <!-- Interactive Add Entity Form -->
+                            <div class="interactive-form-box">
+                                <h5 class="form-title">İnteraktif Graf Simülatörü</h5>
+                                <div class="form-group">
+                                    <label for="entity-name">Nesne Adı</label>
+                                    <input type="text" id="entity-name" placeholder="Örn: Fatura #123" class="input-field">
+                                </div>
+                                <div class="form-group">
+                                    <label for="entity-type">Nesne Tipi (type)</label>
+                                    <select id="entity-type" class="select-field">
+                                        <option value="Document">Document</option>
+                                        <option value="Party">Party (Cari)</option>
+                                        <option value="Resource">Resource (Stok/Varlık)</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-accent btn-sm w-full" id="btn-add-entity">Nesneyi Grafa Ekle</button>
+                            </div>
+                        </div>
+
+                        <!-- Graph Visualizer Panel -->
+                        <div class="card glass-card visualizer-panel">
+                            <h4 class="card-subtitle"><i class="fa-solid fa-circle-nodes"></i> Canlı Nesne Grafı (OBJECT & RELATIONSHIP)</h4>
+                            <div class="graph-canvas" id="graph-canvas">
+                                <!-- Dynamic nodes will be generated here -->
+                            </div>
+                            <div class="graph-legend">
+                                <span class="legend-item"><span class="dot purple"></span> Document</span>
+                                <span class="legend-item"><span class="dot cyan"></span> Party</span>
+                                <span class="legend-item"><span class="dot yellow"></span> Resource</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Slide 4: Event Sourcing & Logs -->
+                <section class="slide-content" id="slide-4">
+                    <div class="slide-header">
+                        <span class="slide-tagline">Event Sourcing</span>
+                        <h2 class="slide-title">Güncelleme Yok: <span class="text-glow">Append-Only Event Stream</span></h2>
+                    </div>
+
+                    <div class="grid grid-4-6">
+                        <div class="card glass-card">
+                            <h4 class="card-subtitle">Nasıl Çalışır?</h4>
+                            <p class="card-text text-sm">
+                                LRP'de `UPDATE` veya `DELETE` komutu çalıştırılmaz. Değişiklikler ardışık ve değişmez birer `EVENT` olarak kaydedilir.
+                            </p>
+                            
+                            <div class="event-trigger-box">
+                                <h5 class="form-title">Olay Simüle Et</h5>
+                                <div class="event-buttons">
+                                    <button class="btn btn-secondary btn-sm btn-event-trigger" data-event="email_received" data-payload='{"from": "müşteri", "subject": "sipariş"}'>
+                                        <i class="fa-solid fa-envelope"></i> Email Geldi
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm btn-event-trigger" data-event="invoice_created" data-payload='{"amount": 12500.0, "invoice_no": "INV-2026-01"}'>
+                                        <i class="fa-solid fa-file-invoice-dollar"></i> Fatura Kesildi
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm btn-event-trigger" data-event="order_approved" data-payload='{"order_id": "ORD-77", "approved_by": "Hermes Agent", "actor_confidence": 0.94}'>
+                                        <i class="fa-solid fa-clipboard-check"></i> Sipariş Onaylandı
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="maturity-box-mini">
+                                <div class="maturity-header">
+                                    <span>Gözlem Olgunluk Skoru (MaturityScore)</span>
+                                    <span class="score-badge" id="maturity-score-val">72%</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="maturity-progress" style="width: 72%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Event Logs -->
+                        <div class="card glass-card log-panel">
+                            <h4 class="card-subtitle"><i class="fa-solid fa-terminal"></i> Canlı Event Log Akışı (LRP.Event)</h4>
+                            <div class="log-output-container" id="log-output">
+                                <!-- Log lines will be appended here -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Slide 5: Double-Entry Ledger -->
+                <section class="slide-content" id="slide-5">
+                    <div class="slide-header">
+                        <span class="slide-tagline">Immutable Ledger</span>
+                        <h2 class="slide-title">Para Her Zaman Çift Taraflı: <span class="text-glow">Ledger Katmanı</span></h2>
+                    </div>
+
+                    <div class="grid grid-1-1">
+                        <div class="card glass-card">
+                            <h4 class="card-subtitle">Posting Rules & Fiscal Period</h4>
+                            <p class="card-text text-sm">
+                                Finansal işlemler generic graf dışına alınarak katı şemalı `Ledger` katmanında (`JOURNAL`, `JOURNAL_LINE`) çift taraflı (debit/credit) olarak işlenir.
+                            </p>
+                            
+                            <div class="fiscal-period-status-box">
+                                <div class="period-status">
+                                    <span>Mali Dönem Kilidi: <strong>Temmuz 2026</strong></span>
+                                    <span class="status-pill open" id="period-lock-indicator"><i class="fa-solid fa-lock-open"></i> AÇIK</span>
+                                </div>
+                                <div class="period-toggle-box">
+                                    <button class="btn btn-secondary btn-sm" id="btn-toggle-period">Dönemi Kilitle / Aç</button>
+                                </div>
+                            </div>
+
+                            <div class="ledger-calculator-box">
+                                <h5 class="form-title">Otomatik Yevmiye Oluşturucu (Posting Rule)</h5>
+                                <div class="form-group">
+                                    <label for="ledger-amount">Fatura Tutarı (TRY)</label>
+                                    <input type="number" id="ledger-amount" value="75000" class="input-field">
+                                </div>
+                                <button class="btn btn-primary btn-sm w-full" id="btn-post-ledger">Yevmiye Kaydı Post Et</button>
+                            </div>
+                        </div>
+
+                        <!-- Ledger Entries Preview -->
+                        <div class="card glass-card ledger-preview-panel">
+                            <h4 class="card-subtitle"><i class="fa-solid fa-book"></i> Yevmiye Fişi Defteri (LRP.Journal & JournalLine)</h4>
+                            <div class="ledger-entries-container" id="ledger-entries">
+                                <!-- Journal entries will be listed here -->
+                                <div class="ledger-empty-state" id="ledger-empty">Henüz yevmiye fişi oluşturulmadı.</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Slide 6: Agent-Native Explainability -->
+                <section class="slide-content" id="slide-6">
+                    <div class="slide-header">
+                        <span class="slide-tagline">AI & Karar Denetimi</span>
+                        <h2 class="slide-title">Explainability: <span class="text-glow">Ajan Karar Analizi</span></h2>
+                    </div>
+
+                    <div class="grid grid-3-5">
+                        <div class="card glass-card">
+                            <h4 class="card-subtitle">Güven Skoru & Eskalasyon</h4>
+                            <p class="card-text text-sm">
+                                AI Ajanlar işlem yaptığında confidence skoru (`actor_confidence`) atanır. Bu skor belirlenen eşiğin altına düşerse süreç otomatik durur ve insana eskalasyon görevi (`PROCESS_TASK`) açılır.
+                            </p>
+
+                            <div class="slider-box">
+                                <h5 class="form-title">Ajan Güven Oranı (Confidence)</h5>
+                                <div class="confidence-val-display"><span id="confidence-pct">87%</span></div>
+                                <input type="range" id="confidence-slider" min="0" max="100" value="87" class="slider-field">
+                                <div class="slider-labels">
+                                    <span>0% (İnsan Onayı Şart)</span>
+                                    <span>100%</span>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-accent btn-sm w-full" id="btn-simulate-decision">Ajan Kararı Simüle Et</button>
+                        </div>
+
+                        <!-- Agent Explainability Detail -->
+                        <div class="card glass-card explainability-panel">
+                            <h4 class="card-subtitle"><i class="fa-solid fa-brain"></i> Ajan Karar Denetim İzleme Kaydı (AgentContext)</h4>
+                            <div class="explainability-box" id="explainability-output">
+                                <div class="empty-explain">Simülasyon butonuna basarak ajan kararını tetikleyin.</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Slide 7: Pluggable Apps -->
+                <section class="slide-content" id="slide-7">
+                    <div class="slide-header">
+                        <span class="slide-tagline">Geçiş Yönetimi</span>
+                        <h2 class="slide-title">Değişebilir Uygulamalar: <span class="text-glow">Pluggable Apps</span></h2>
+                    </div>
+
+                    <div class="card glass-card mb-6">
+                        <p class="card-text text-sm">
+                            LRP'de araçlar çekirdeğe bağımlıdır, çekirdek araçlara değil. Her yetenek (Capability) Seviye 1 (Basit/Manuel) ile başlayıp Seviye 3 (LRP Native) çözüme kademeli ve güvenli olarak taşınır.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-3">
+                        <div class="card glass-card flex-col flex-between">
+                            <div>
+                                <div class="level-badge lvl-1">Seviye 1</div>
+                                <h4 class="capability-title">Başlangıç (.md / Excel)</h4>
+                                <p class="card-text text-xs opacity-75">
+                                    Manuel yönetim, sıfır kod, hızlı başlangıç.
+                                </p>
+                            </div>
+                            <div class="lvl-example">Örn: `Açık / Kapalı .md task takibi`</div>
+                        </div>
+                        <div class="card glass-card flex-col flex-between highlighted-level">
+                            <div>
+                                <div class="level-badge lvl-2">Seviye 2</div>
+                                <h4 class="capability-title">Büyüme (n8n / Slack)</h4>
+                                <p class="card-text text-xs opacity-75">
+                                    Dış servis entegrasyonu, otomasyon araçları, Slack bildirimleri.
+                                </p>
+                            </div>
+                            <div class="lvl-example">Örn: `n8n flow tetiklemeli workflow`</div>
+                        </div>
+                        <div class="card glass-card flex-col flex-between">
+                            <div>
+                                <div class="level-badge lvl-3">Seviye 3</div>
+                                <h4 class="capability-title">LRP Native (Oban / BEAM)</h4>
+                                <p class="card-text text-xs opacity-75">
+                                    Postgres tabanlı transactional kuyruklar, supervisor izleme, backpressure.
+                                </p>
+                            </div>
+                            <div class="lvl-example">Örn: `Oban + PROCESS_TASK`</div>
+                        </div>
+                    </div>
+
+                    <div class="migration-simulation-box glass-card mt-6">
+                        <div class="migration-status-header">
+                            <h4>Entegrasyon Sıcak Geçiş Simülasyonu (MigrationTracker)</h4>
+                            <span class="status-pill shadow" id="migration-stage-badge">SHADOW MOD</span>
+                        </div>
+                        <div class="migration-tracker-steps">
+                            <div class="m-step active" id="mstep-shadow">1. Shadow (İzleme)</div>
+                            <div class="m-step" id="mstep-partial">2. Partial (Kısmi Karar)</div>
+                            <div class="m-step" id="mstep-primary">3. Primary (Ana Karar)</div>
+                            <div class="m-step" id="mstep-cutover">4. Full Cutover</div>
+                        </div>
+                        <div class="migration-action-box">
+                            <span class="discrepancy-text">Kalan Uyuşmazlık (discrepancy_count): <strong id="disc-count">3</strong></span>
+                            <button class="btn btn-accent btn-sm" id="btn-fix-discrepancy">Uyuşmazlığı Çöz ve Geçişi İlerlet</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+</body>
+</html>

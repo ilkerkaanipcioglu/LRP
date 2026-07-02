@@ -43,7 +43,7 @@ applications are built.
 |---|---|---|
 | 9 Core Tables (Ecto + SQLite3) | ✅ Done | Tenants, Actors, Objects, Items, Relationships, Events, Policies, ProcessTasks, Versions |
 | Object CRUD API | ✅ Done | `create_object/1`, `update_object/2`, `create_item/1` |
-| Relationship Graph | ✅ Done | `relate/5`, `list_relationships/3` |
+| Relationship Graph | ✅ Done | `relate/5`, `list_relationships/3`, Semantic path DFS/BFS |
 | Multi-channel Event Logging | ✅ Done | Email, Slack, A2A (agent_mesh), thread parent_id |
 | Version Snapshots (Full) | ✅ Done | Full snapshot today; JSON Patch delta planned (ADR-0002) |
 | Policy-based Authorization (Static) | ✅ Done | `authorize/3` — allow/deny per resource_type+action |
@@ -54,8 +54,13 @@ applications are built.
 | `embedding` field on Objects | ✅ Done | Binary field; pgvector(1536) on PostgreSQL via separate migration |
 | PostgreSQL RLS | 🔲 Schema ready | SQL in migration, requires PostgreSQL adapter |
 | HOT Event Durability | ⚠️ Partial | HOT events are RAM-only today; WAL not yet implemented — **"Everything is traceable" does not apply to HOT tier yet** |
-| Ledger (VUK/IFRS) | 🔲 Planned | Schema defined; no Ecto schemas or migrations yet |
-| Ledger Explainability | 🔲 Planned | `source_event_id → POSTING_RULE → JOURNAL_LINE` chain not yet built — **applies to Object Graph only today** |
+| Ledger (VUK/IFRS) | ✅ Done | Immutable ledgers, journals, lines, and fiscal period locks are implemented & tested |
+| Ledger Explainability | ✅ Done | `source_event_id → POSTING_RULE → JOURNAL_LINE` posting automation chain is implemented & tested |
+| Capability / Provider / Binding | ✅ Done | Hot-swap active provider bindings (ADR-0004) implemented |
+| Migration Tracker | ✅ Done | Stage-based migration tracking (shadow/partial/primary/cutover) (ADR-0005) implemented |
+| Onboarding & Observation | ✅ Done | wizard CLI + `ObservationMode` + `MaturityScore` (ADR-0006) implemented |
+| Source Connector | ✅ Done | Scans files and Git repos to map code architecture to LRP objects |
+| Code Compliance & Codegen | ✅ Done | AST parsers for Elixir/Python and AI-based code modifications/tests |
 | ReBAC / OpenFGA | 🔲 Planned | ADR-0003 accepted; static Policy table used for now |
 | CQRS Read Views | 🔲 Planned | ADR-0001 accepted; no consumers yet |
 | JSON Patch Versioning | 🔲 Planned | ADR-0002 accepted; full snapshot used today |
@@ -122,11 +127,12 @@ lrp/
 | [ADR-0001](docs/adr/0001-cqrs-read-views.md) | CQRS Read Views (max 5s staleness) | Accepted, not yet implemented |
 | [ADR-0002](docs/adr/0002-json-patch-versioning.md) | JSON Patch deltas + 50-patch compaction | Accepted, not yet implemented |
 | [ADR-0003](docs/adr/0003-rebac-authorization.md) | ReBAC via OpenFGA | Accepted, not yet implemented |
-| [ADR-0004](docs/adr/0004-capability-provider-binding.md) | Capability/Provider/Binding — hot-swap provider pattern | Accepted, not yet implemented |
-| [ADR-0005](docs/adr/0005-migration-tracker.md) | MIGRATION_TRACKER — shadow/partial/primary/full_cutover | Accepted, not yet implemented |
-| [ADR-0006](docs/adr/0006-observation-mode.md) | OBSERVATION_MODE + MATURITY_SCORE — three onboarding scenarios | Accepted, not yet implemented |
-| [ADR-0007](docs/adr/0007-connector-contract.md) | Connector/Adapter contract + EVENT_SUBSCRIPTION outbound | Accepted, not yet implemented |
-| [ADR-0008](docs/adr/0008-modular-data-integration-topology.md) | Modular Data Integration Topology & Capability Extensibility | Accepted |
+| [ADR-0004](docs/adr/0004-capability-provider-binding.md) | Capability/Provider/Binding — hot-swap provider pattern | ✅ Implemented |
+| [ADR-0005](docs/adr/0005-migration-tracker.md) | MIGRATION_TRACKER — shadow/partial/primary/full_cutover | ✅ Implemented |
+| [ADR-0006](docs/adr/0006-observation-mode.md) | OBSERVATION_MODE + MATURITY_SCORE — three onboarding scenarios | ✅ Implemented |
+| [ADR-0007](docs/adr/0007-connector-contract.md) | Connector/Adapter contract + EVENT_SUBSCRIPTION outbound | ✅ Implemented |
+| [ADR-0008](docs/adr/0008-modular-data-integration-topology.md) | Modular Data Integration Topology & Capability Extensibility | ✅ Implemented |
+| [ADR-0009](docs/adr/0009-hybrid-frontend-architecture.md) | Hybrid Frontend Architecture (Phoenix LiveView & Rust/WASM/Perspective) | ✅ Implemented |
 
 ---
 
@@ -147,6 +153,20 @@ chmod +x setup.sh && ./setup.sh
 ```
 
 Setup betiği şunları yapar: Elixir kontrolü → `mix deps.get` → `mix ecto.migrate` → `mix lrp.seed`
+
+---
+
+### İnteraktif Sunum & Canlı Demo Arayüzü
+
+LRP felsefesini, mimari prensiplerini, rakip analizlerini, yevmiye hesaplayıcısını ve geçiş/onboarding simülasyonunu tarayıcıda adım adım görmek için:
+
+```bash
+cd demo_ui
+npm install
+npm run dev
+```
+
+Uygulama yerel olarak `http://localhost:5173/` adresinde çalışacaktır.
 
 ---
 
@@ -180,6 +200,10 @@ mix lrp.event list --tenant <id> --json   # MCP
 
 # GitHub repo bağlama (SourceConnector)
 mix lrp.connect https://github.com/user/repo
+
+# md-only tasarımları koda yükseltme (Upgrade)
+mix lrp.upgrade --from=md-only --to=elixir
+mix lrp.upgrade --from=md-only --to=elixir --migrate
 ```
 
 ---
@@ -205,8 +229,8 @@ The integration tests cover:
 | Version | Milestone | Status |
 |---|---|---|
 | v0.1 | Entity Engine (9 core tables + tests) | ✅ Done |
-| v0.2 | Workflow Engine (state machines) | 🔲 Planned |
-| v0.3 | Ledger (VUK + IFRS Ecto + migrations) | 🔲 Planned |
+| v0.2 | Workflow Engine (state machines, process tasks) | ✅ Done |
+| v0.3 | Ledger (VUK + IFRS Ecto + migrations, posting rules) | ✅ Done |
 | v0.4 | AI Router + Classifier | 🔲 Planned |
 | v0.5 | Agent Framework (governance_core integration) | 🔲 Planned |
 | v0.6 | Plugin SDK | 🔲 Planned |
