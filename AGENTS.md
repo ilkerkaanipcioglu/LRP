@@ -173,6 +173,7 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 
 ### Analiz & Gözlem (Shadow Mode)
 - `mix lrp.analyze --source <path|url> [--tenant <id>] [--json]` - Kod analiz skoru üretir ve PROCESS_TASK'ları yazar.
+- `mix lrp.modernize --source <path|url> [--target md|elixir] [--output-dir <path>]` - Eski sistemi analiz edip LRP standartlarında mimari (.md) veya Elixir kodu üretir (Modernization MVP).
 - `mix lrp.tasks [--tenant <id>] [--pending] [--json]` - Bekleyen iş veya iyileştirme görevlerini listeler.
 - `mix lrp.observe --system <ad> --purpose <purpose> [--tenant <id>] [--json]` - Gölge izleme (ObservationMode) başlatır.
 - `mix lrp.maturity [--tenant <id>] [--json]` - Gölgedeki sistemin LRP geçiş olgunluğunu (MaturityScore) gösterir.

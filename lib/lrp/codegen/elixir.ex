@@ -223,8 +223,13 @@ defmodule LRP.Codegen.ElixirGenerator do
   defp context_template(capability_type, module_name, opts) do
     interface = Keyword.get(opts, :interface_contract, %{}) || %{}
 
+    dynamic_interface =
+      Enum.reject(interface, fn {sig, _} ->
+        sig in ["create/1", "get/1", "list/1"]
+      end)
+
     dynamic_functions =
-      Enum.map(interface, fn {fn_signature, fn_desc} ->
+      Enum.map(dynamic_interface, fn {fn_signature, fn_desc} ->
         case String.split(fn_signature, "/") do
           [fn_name, arity_str] ->
             arity = String.to_integer(arity_str)

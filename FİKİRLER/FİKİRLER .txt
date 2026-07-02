@@ -1,0 +1,76 @@
+LRP'nin şu ana kadarki 25 kuralını (10 inşa + 15 dayanıklılık) temel alıp, senin şimdi istediğin 6 boyutu (sağlamlık, core, ölçeklenebilirlik, hız, AI-friendly, Web3-friendly, gelecek teknolojilere esneklik) ayrı ayrı ele alacağım. Amaç: eski bir sistemi incelerken "bu kuralı ihlal ediyor mu?" diye sorabileceğin somut bir checklist çıkarmak.
+
+## 0. Önce bir üst prensip: Çekirdek (Core) hiçbir şeye bağımlı olmasın
+
+Bu, altındaki her şeyin temeli. LRP'nin "core"u —entity engine, event store, ledger, workflow engine— şunlara **asla doğrudan bağımlı olmamalı**:
+- Belirli bir AI sağlayıcısı (OpenAI, Anthropic, yerel model)
+- Belirli bir blockchain/Web3 protokolü
+- Belirli bir frontend teknolojisi
+- Belirli bir bulut sağlayıcısı
+
+**Kural:** Core, sadece **kendi domain modelini** ve **port/interface tanımlarını** bilir. AI, Web3, UI, bulut — hepsi "adapter" olarak dışarıdan takılır. Bu, Hexagonal Architecture / Ports & Adapters deseninin ta kendisi. Neden kritik: bugün en iyi AI modeli GPT ise, 2 yıl sonra başka bir model olabilir; bugün en iyi blockchain Ethereum ise yarın başka biri olabilir. Core bunlardan etkilenmemeli, sadece adapter değişmeli.
+
+Eski sistemi incelerken sorulacak soru: **"Bu kod, belirli bir vendor/teknoloji ismini biliyor mu?"** Biliyorsa, o kod core'da olmamalı, adapter katmanına taşınmalı.
+
+## 1. Sağlamlık (Robustness) — Ek kurallar
+
+LRP'nin 15 dayanıklılık kuralına ek olarak:
+
+- **Fail-safe defaults** — Bir kural, bir konfigürasyon eksikse sistem "en güvenli" davranışı seçmeli (örneğin bilinmeyen bir işlem tipi geldiğinde reddetmeli, varsayılan olarak izin vermemeli).
+- **Explicit error types, no silent failure** — Hata "sessizce yutulmasın", her hata tipi (validation error, business rule violation, infrastructure error) ayrı ayrı tanımlı ve loglanır olsun. Elixir'in `{:ok, result} | {:error, reason}` deseni buna zaten uygun, bunu her katmanda zorunlu tut.
+- **Her dış çağrı timeout + retry + circuit breaker ile sarılı olsun** — Sadece "dış servisler" değil, iç mikroservisler arası çağrılar da dahil.
+- **Veri kaybı > veri tutarsızlığı** — Belirsizlik anında (network koptu, cevap gelmedi) sistem "belki oldu, tekrar dene" tarafını seçmeli ama idempotency ile tekrar denemenin çift kayıt yaratmayacağından emin olmalı (zaten LRP'de var, altını çiziyorum çünkü ihlali en pahalıya patlayan kural).
+
+## 2. Ölçeklenebilirlik — Ek kurallar
+
+- **Her entity/tenant bağımsız ölçeklenebilir olmalı** — Multi-tenancy'de bir kiracının yükü diğerini etkilememeli (noisy neighbor problemi). BEAM'in process izolasyonu burada doğal avantaj, ama veritabanı seviyesinde de (connection pool, query limit) tenant başına izolasyon düşünülmeli.
+- **Okuma ve yazma bağımsız ölçeklensin (CQRS zaten var)** — Ama ayrıca: **rapor/analitik yükü asla transactional veritabanını etkilemesin.** Read replica veya ayrı bir OLAP katmanı zorunlu olsun, opsiyonel değil.
+- **Yatay ölçekleme test edilmeden "ölçeklenebilir" denmesin** — Yani bir iddia değil, gerçek bir yük testiyle (k6, Gatling gibi) doğrulanmış bir özellik olmalı. Eski sistemi incelerken: "Bu modül 10x yük altında test edilmiş mi?" sorusu sorulmalı.
+
+## 3. Hız — Ek kurallar (önceki konuşmalarımızın özeti buraya oturuyor)
+
+- **Her ekran/API için bir performans bütçesi (budget) tanımlı olsun** — "Hızlı olsun" yeterli değil, "bu endpoint 200ms altında cevap vermeli" gibi somut hedef olmalı. Bütçeyi aşan kod, code review'da otomatik reddedilsin (CI'da performans testi).
+- **Varsayılan olarak lazy, gerektiğinde eager** — Veri, ihtiyaç duyulmadan önceden çekilmesin (over-fetching yapılmasın), ama sık kullanılan kritik veri önceden hesaplanıp cache'lensin (CQRS okuma tarafı).
+- **Büyük veri = streaming, asla tam yükleme yok** — Konuştuğumuz gibi, 1 satır da 1 milyon satır da aynı kod yoluyla (`Repo.stream`) işlensin, "küçükse tam yükle, büyükse stream et" gibi iki farklı kod yolu olmasın — bu tutarsızlık hataya açık.
+
+## 4. AI-Friendly — Yeni kurallar
+
+Bu, LRP'nin zaten "AI as Runtime" dediği kısmı somutlaştırmak:
+
+- **Her entity ve event, insan dilinde açıklanabilir olmalı** — Yani sadece `status_code: 4` değil, `status_code: 4, status_meaning: "iptal_edildi"` gibi self-descriptive veri. Bir AI modeli veya insan, veritabanı şemasına bakmadan veriyi anlayabilmeli.
+- **Reasoning trace zorunlu, opsiyonel değil** — Bir AI karar verdiğinde (fiyat önerisi, risk skoru, dolandırıcılık tespiti), o kararın **hangi girdilerle, hangi modelle, hangi güven skoruyla** verildiği event olarak saklanmalı. Bu hem denetim hem de modeli sonradan değiştirdiğinde "eski kararla yeni karar neden farklı" sorusuna cevap verir.
+- **Confidence-based routing** — Az önceki "Agent Router" fikrine ek: düşük riskli/düşük belirsizlikli kararları ucuz/hızlı modele, yüksek riskli/belirsiz kararları güçlü modele veya insana yönlendir. Bu bir maliyet ve güvenlik prensibi.
+- **Human-in-the-loop çıkış noktası her zaman olsun** — AI'nin otonom karar verdiği her akışta, bir insanın "dur, ben bakayım" diyebileceği bir müdahale noktası (approval gate) tanımlı olmalı. Asla "AI karar verdi, geri dönüş yok" olmasın.
+- **Embedding/semantic layer, core'dan ayrı bir servis olarak** — Vektör veritabanı (pgvector, Qdrant vb.) bugünün teknolojisi; yarın değişebilir. Bu yüzden semantic search bir adapter olsun, core'a gömülü olmasın.
+- **Veri, AI'nin eğitim/fine-tuning'i için "temiz" tutulsun** — Yani gereksiz null, tutarsız format, kirli veri AI'nin kötü karar vermesine yol açar. Veri kalitesi kuralları (validation) AI-friendly'nin bir ön koşulu.
+
+## 5. Web3-Friendly — Yeni kurallar
+
+- **Kimlik doğrulama pluggable olsun** — Bugün email/şifre veya OAuth, yarın DID (Decentralized Identifier) veya wallet-based auth (SIWE — Sign-In with Ethereum) olabilir. Auth katmanı bir adapter olsun, core "kullanıcı ID'si" olarak soyut bir kimlik bilsin, nasıl doğrulandığını bilmesin.
+- **Değerlerin (para, varlık) kaynağı esnek olsun** — Bugün fiat para, yarın stablecoin veya tokenize varlık olabilir. Ledger (defter) sistemi "hangi para birimi/varlık" sorusuna kayıtsız kalacak şekilde tasarlanmalı — double-entry mantığı zaten buna uygun, sadece "currency/asset type" alanını genişletilebilir tut.
+- **On-chain settlement opsiyonel bir "sink" olsun** — Yani bir işlem gerçekleştiğinde, event log'dan bir adapter aracılığıyla isteğe bağlı olarak blockchain'e de yazılabilsin (proof/anchor olarak). Bu, "her şey blockchain'de olsun" değil, "gerekirse blockchain'e köprü kurabilelim" demek.
+- **Smart contract'lar ile entegrasyon, event-driven olsun** — Blockchain event'leri (bir transfer, bir mint) LRP'nin kendi event stream'ine bir "external event" olarak akabilmeli, doğrudan senkron çağrı olmamalı (blockchain'in yavaş/belirsiz onay süresi nedeniyle).
+- **Merkeziyetsizlik bir "mod", zorunluluk değil** — LRP'nin çoğu müşterisi muhtemelen merkezi kalacak. Web3 desteğini "isteğe bağlı özellik" olarak tasarla, çekirdek mimariyi buna göre karmaşıklaştırma.
+
+## 6. Gelecek Teknolojilere Esneklik — Yeni kurallar
+
+- **Versiyonlanmış her şey** — Sadece event şeması değil (LRP'de zaten var), API'ler, iş kuralları (posting rule'lar), workflow tanımları da versiyonlu olsun. Eski versiyon çalışmaya devam ederken yeni versiyon paralel yaşayabilsin.
+- **Plugin/Extension SDK, çekirdekten önce gelsin** — "v0.6 Plugin SDK" planınız var, ama bunu önceliklendirmenizi öneririm çünkü gelecekteki her yeni teknoloji (yeni AI modeli, yeni ödeme sağlayıcı, yeni blockchain) bir plugin olarak eklenebilmeli, core'a dokunmadan.
+- **Konfigürasyon > Kod** — Yeni bir iş kuralı eklerken kod deploy etmek yerine, mümkün olduğunca konfigürasyon/kural motoru (rule engine) ile tanımlanabilsin. Bu hem hız hem esneklik kazandırır.
+- **Teknoloji seçimlerini "değiştirilebilir" varsay** — Bugün Postgres, yarın farklı bir veritabanı; bugün Elixir, yarın (umulmaz ama) başka bir runtime. Domain mantığını (iş kurallarını) altyapı kodundan (Ecto query'leri, HTTP handler'lar) kesin çizgiyle ayır. Domain katmanı saf, framework-agnostic Elixir modülleri olsun.
+- **"Şimdilik hardcode, sonra genelleştiririm" tuzağına düşme ama YAGNI'yi de unutma** — Bu ikisi çelişkili gibi görünür ama değil: **interface'i genel tasarla, implementasyonu somut tut.** Yani "hangi AI modelini kullanacağız" sorusunun cevabını bugünden bilmene gerek yok, ama "AI modeliyle nasıl konuşacağız" (port/interface) sorusunun cevabını bugünden net tasarlaman gerekiyor.
+
+## Eski sistemi incelerken kullanacağın pratik checklist
+
+Bir modülü LRP'ye taşırken şu soruları sor:
+
+1. Bu modül belirli bir vendor/teknoloji ismini biliyor mu? (Biliyorsa → adapter'a taşı)
+2. Bu modülde UPDATE/DELETE var mı? (Varsa → event sourcing'e çevir)
+3. Bu modül "kim yaptı, ne zaman, neden" bilgisini kaydediyor mu? (Kaydetmiyorsa → audit ekle)
+4. Bu modülün API'si var mı, yoksa doğrudan UI'ye mi bağlı? (Bağlıysa → API-first'e çevir)
+5. Bu modül aynı isteği iki kez alırsa ne olur? (Çift kayıt oluyorsa → idempotency ekle)
+6. Bu modülün performans hedefi tanımlı mı, ölçülüyor mu? (Değilse → bütçe koy, ölç)
+7. Bu modül AI'nin karar vermesi gereken bir yerde mi? (Öyleyse → reasoning trace + human-in-loop noktası ekle)
+8. Bu modül gelecekte değişebilecek bir varsayım üzerine mi kurulu? (Tek para birimi, tek kimlik doğrulama yöntemi vb.) (Öyleyse → soyutla)
+
+Bu checklist, hem eski sistemi tararken tutarlı bir dönüşüm süreci sağlar hem de LRP'nin kendi iç tutarlılığını korumasına yardımcı olur — 25 kuralın "kağıt üzerinde kalması" riskini azaltır çünkü her modül geçişte somut bir doğrulamadan geçmiş olur.
