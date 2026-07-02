@@ -73,5 +73,16 @@ defmodule LRP.CodegenTest do
     context_content = File.read!(context_file)
     assert context_content =~ "defmodule LRP.Billing"
     assert context_content =~ "def create(attrs)"
+
+    # Dinamik olarak kontrattan üretilen fonksiyonları doğrula
+    assert context_content =~ "def create_invoice(arg1, arg2)"
+    assert context_content =~ "def cancel_invoice(arg1)"
+
+    # .md dosyasındaki YAML frontmatter yapısını doğrula
+    [billing_md] = Enum.filter(generated_mds, &String.contains?(&1, "billing.md"))
+    billing_md_content = File.read!(billing_md)
+    assert billing_md_content =~ "---"
+    assert billing_md_content =~ "capability: billing"
+    assert billing_md_content =~ "create_invoice/2: \"fatura oluşturur ve objeyi kaydeder\""
   end
 end

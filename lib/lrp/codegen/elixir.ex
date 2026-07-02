@@ -86,10 +86,15 @@ defmodule LRP.Codegen.ElixirGenerator do
           |> Enum.filter(&String.ends_with?(&1, ".md"))
           |> Enum.flat_map(fn file ->
             cap_type = String.replace(file, ".md", "")
+            filepath = Path.join(cap_dir, file)
+            
+            # Parse YAML frontmatter from md blueprint
+            metadata = parse_frontmatter(filepath)
+            interface_contract = Map.get(metadata, :interface_contract, %{})
 
             {:ok, mig_path}  = generate_migration(cap_type, mig_dir)
             {:ok, sch_path}  = generate_schema(cap_type, lib_dir)
-            {:ok, ctx_path}  = generate_context(cap_type, lib_dir)
+            {:ok, ctx_path}  = generate_context(cap_type, lib_dir, interface_contract: interface_contract)
 
             [mig_path, sch_path, ctx_path]
           end)
@@ -99,6 +104,52 @@ defmodule LRP.Codegen.ElixirGenerator do
       {:error, _} ->
         {:error, "#{cap_dir} dizini bulunamadı. md-only modu başlatıldı mı?"}
     end
+  end
+
+  defp parse_frontmatter(filepath) do
+    content = File.read!(filepath)
+    case String.split(content, "---") do
+      ["", yaml_content | _rest] ->
+        parse_yaml(yaml_content)
+      _ ->
+        %{interface_contract: %{}}
+    end
+  end
+
+  defp parse_yaml(yaml_str) do
+    lines = String.split(yaml_str, ~r/\r?\n/)
+    Enum.reduce(lines, %{interface_contract: %{}}, fn line, acc ->
+      trimmed = String.trim(line)
+      cond do
+        trimmed == "" ->
+          acc
+        
+        String.contains?(line, ":") ->
+          [key, val] = String.split(line, ":", parts: 2)
+          key = String.trim(key)
+          val = String.trim(val)
+
+          if key == "interface_contract" or String.starts_with?(line, "  ") do
+            if String.starts_with?(line, "  ") do
+              [fn_name, fn_desc] = String.split(trimmed, ":", parts: 2)
+              fn_name = String.trim(fn_name)
+              fn_desc = String.trim(fn_desc)
+              fn_desc = String.replace(fn_desc, ~r/^["']|["']$/, "")
+              
+              new_contract = Map.put(acc.interface_contract, fn_name, fn_desc)
+              Map.put(acc, :interface_contract, new_contract)
+            else
+              acc
+            end
+          else
+            val = String.replace(val, ~r/^["']|["']$/, "")
+            Map.put(acc, String.to_atom(key), val)
+          end
+
+        true ->
+          acc
+      end
+    end)
   end
 
   # ── Şablonlar ─────────────────────────────────────────────────────────────────
@@ -169,7 +220,35 @@ defmodule LRP.Codegen.ElixirGenerator do
     """
   end
 
-  defp context_template(capability_type, module_name, _opts) do
+  defp context_template(capability_type, module_name, opts) do
+    interface = Keyword.get(opts, :interface_contract, %{}) || %{}
+
+    dynamic_functions =
+      Enum.map(interface, fn {fn_signature, fn_desc} ->
+        case String.split(fn_signature, "/") do
+          [fn_name, arity_str] ->
+            arity = String.to_integer(arity_str)
+            args =
+              if arity > 0 do
+                1..arity |> Enum.map(fn i -> "arg#{i}" end) |> Enum.join(", ")
+              else
+                ""
+              end
+
+            """
+              @doc "#{fn_desc}"
+              def #{fn_name}(#{args}) do
+                # TODO: Implement #{fn_name}/#{arity} for #{capability_type}
+                {:error, :not_implemented}
+              end
+            """
+
+          _ ->
+            ""
+        end
+      end)
+      |> Enum.join("\n")
+
     """
     # Bu dosya `mix lrp.upgrade --from=md-only --to=elixir` tarafından üretilmiştir.
     defmodule LRP.#{module_name} do
@@ -197,6 +276,9 @@ defmodule LRP.Codegen.ElixirGenerator do
         from(r in #{module_name}Schema, where: r.tenant_id == ^tenant_id)
         |> Repo.all()
       end
+
+      # ─── Dinamik Kontrat Fonksiyonları ─────────────────────────────────────────
+    #{dynamic_functions}
     end
     """
   end

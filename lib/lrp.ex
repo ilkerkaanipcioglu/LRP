@@ -233,20 +233,17 @@ defmodule LRP do
 
   # ─── Git-like Versioning API ────────────────────────────────────────────────
   # actor_confidence: NULL=insan commit, 0.0-1.0=ajan commit
+  # actor_confidence: NULL=insan commit, 0.0-1.0=ajan commit
   def commit_version(object_id, committed_by_actor_id, commit_message, opts \\ []) do
     actor_confidence = Keyword.get(opts, :actor_confidence, nil)
+    compaction_threshold = Keyword.get(opts, :compaction_threshold, 50)
 
     case get_object_with_items(object_id) do
       nil ->
         {:error, :object_not_found}
 
       object ->
-        latest_version =
-          Version
-          |> where(object_id: ^object_id)
-          |> order_by([desc: :committed_at, desc: :inserted_at])
-          |> limit(1)
-          |> Repo.one()
+        latest_version = find_latest_version(object_id)
 
         parent_version_id = if latest_version, do: latest_version.id, else: nil
 
@@ -267,17 +264,87 @@ defmodule LRP do
             end)
         }
 
+        # Decide whether to save full snapshot or delta (ADR-0002 JSON Patch)
+        delta_count = if latest_version, do: count_deltas_since_last_full(latest_version), else: 0
+
+        snapshot_field =
+          cond do
+            is_nil(latest_version) ->
+              Map.merge(snapshot, %{"type" => "full", "data" => snapshot})
+
+            delta_count >= compaction_threshold ->
+              Map.merge(snapshot, %{"type" => "full", "data" => snapshot})
+
+            true ->
+              parent_snap = reconstruct_snapshot(latest_version)
+              patch = LRP.JSONPatch.diff(parent_snap, snapshot)
+              %{"type" => "delta", "patch" => patch}
+          end
+
         attrs = %{
           object_id: object_id,
           parent_version_id: parent_version_id,
           commit_message: commit_message,
           committed_by_actor_id: committed_by_actor_id,
           committed_at: DateTime.utc_now(),
-          object_snapshot: snapshot,
+          object_snapshot: snapshot_field,
           actor_confidence: actor_confidence
         }
 
         %Version{} |> Version.changeset(attrs) |> Repo.insert()
+    end
+  end
+
+  defp count_deltas_since_last_full(nil), do: 0
+  defp count_deltas_since_last_full(version) do
+    count_deltas_recursive(version, 0)
+  end
+
+  defp count_deltas_recursive(nil, acc), do: acc
+  defp count_deltas_recursive(version, acc) do
+    case Map.get(version.object_snapshot, "type") do
+      "delta" ->
+        parent = if version.parent_version_id, do: Repo.get(Version, version.parent_version_id), else: nil
+        count_deltas_recursive(parent, acc + 1)
+      _ ->
+        acc
+    end
+  end
+
+  defp find_latest_version(object_id) do
+    versions = Repo.all(from(v in Version, where: v.object_id == ^object_id))
+    case versions do
+      [] -> nil
+      [single] -> single
+      list ->
+        parent_ids = MapSet.new(Enum.map(list, & &1.parent_version_id))
+        Enum.find(list, fn v -> !MapSet.member?(parent_ids, v.id) end)
+    end
+  end
+
+  @doc """
+  Reconstructs the full snapshot of an object for a specific version.
+  """
+  def reconstruct_version(version_id) do
+    case Repo.get(Version, version_id) do
+      nil -> nil
+      version -> reconstruct_snapshot(version)
+    end
+  end
+
+  defp reconstruct_snapshot(version) do
+    case Map.get(version.object_snapshot, "type") do
+      "full" ->
+        Map.get(version.object_snapshot, "data")
+
+      "delta" ->
+        parent_version = Repo.get(Version, version.parent_version_id)
+        parent_snap = reconstruct_snapshot(parent_version)
+        LRP.JSONPatch.apply_patch(parent_snap, Map.get(version.object_snapshot, "patch"))
+
+      _ ->
+        # Fallback for legacy database entries
+        version.object_snapshot
     end
   end
 
@@ -630,6 +697,11 @@ defmodule LRP do
 
   def sync_read_model(object_id) do
     LRP.ReadModel.sync_object(object_id)
+  end
+
+  # ─── Capability Execution Routing API (ADR-0004) ─────────────────────────────
+  def execute_capability(tenant_id, capability_type, function_name, arguments) do
+    LRP.Capability.Manager.execute_capability(tenant_id, capability_type, function_name, arguments)
   end
 end
 

@@ -240,4 +240,163 @@ defmodule LRP.Capability.Manager do
       binding -> Repo.get(Provider, binding.active_provider_id)
     end
   end
+
+  # ── Execution Routing (ADR-0004) ──────────────────────────────────────────────
+
+  @doc """
+  Executes a function of a capability on the currently bound active provider.
+  Routes the call dynamically depending on the provider type:
+  - "elixir_module": Calls the configured Elixir module using `apply/3`.
+  - "internal_md": Creates a suggested `ProcessTask` for a human and returns `{:error, {:manual_blueprint_required, task.id}}`.
+  - "human": Creates a pending `ProcessTask` assigned to a human and returns `{:error, {:assigned_to_human, task.id}}`.
+  - "external_app": Simulates triggering external API call, logs a routing Event, returns `{:ok, :dispatched}`.
+  - "agent": Logs an coordination Event and returns `{:ok, :coordinated}`.
+  """
+  @spec execute_capability(binary(), String.t(), String.t(), list()) ::
+          {:ok, term()} | {:error, term()}
+  def execute_capability(tenant_id, capability_type, function_name, arguments) do
+    case Repo.get_by(Capability, tenant_id: tenant_id, capability_type: capability_type) do
+      nil ->
+        {:error, :capability_not_found}
+
+      cap ->
+        case active_provider(cap.id) do
+          nil ->
+            {:error, :no_active_provider_bound}
+
+          prov ->
+            dispatch_execution(cap, prov, function_name, arguments)
+        end
+    end
+  end
+
+  defp dispatch_execution(_cap, %Provider{provider_type: "elixir_module"} = prov, function_name, arguments) do
+    module_name = Map.get(prov.provider_ref, "module") || Map.get(prov.provider_ref, :module)
+    
+    if is_nil(module_name) do
+      {:error, :elixir_module_not_configured}
+    else
+      try do
+        module =
+          if is_atom(module_name) do
+            module_name
+          else
+            String.to_existing_atom("Elixir." <> module_name)
+          end
+          
+        fun = String.to_existing_atom(function_name)
+        {:ok, apply(module, fun, arguments)}
+      rescue
+        e ->
+          {:error, {:execution_failed, inspect(e)}}
+      end
+    end
+  end
+
+  defp dispatch_execution(cap, %Provider{provider_type: "internal_md"} = prov, function_name, arguments) do
+    obj_id = resolve_object_id(cap.tenant_id, arguments)
+    
+    {:ok, task} = LRP.create_process_task(%{
+      tenant_id: cap.tenant_id,
+      process_name: "Manual Blueprint Execution",
+      name: "Execute #{cap.capability_type} -> #{function_name}",
+      object_id: obj_id,
+      state: "suggested",
+      status: "pending",
+      priority: "medium",
+      metadata: %{
+        "provider_id" => prov.id,
+        "function" => function_name,
+        "arguments" => inspect(arguments),
+        "reason" => "Process is currently defined only as markdown design document (blueprint)."
+      }
+    })
+    {:error, {:manual_blueprint_required, task.id}}
+  end
+
+  defp dispatch_execution(cap, %Provider{provider_type: "human"} = prov, function_name, arguments) do
+    assigned_actor_id = Map.get(prov.provider_ref, "actor_id") || Map.get(prov.provider_ref, :actor_id)
+    obj_id = resolve_object_id(cap.tenant_id, arguments)
+
+    {:ok, task} = LRP.create_process_task(%{
+      tenant_id: cap.tenant_id,
+      process_name: "Human Action Workflow",
+      name: "Perform #{cap.capability_type} -> #{function_name}",
+      object_id: obj_id,
+      state: "assigned",
+      status: "pending",
+      priority: "high",
+      assigned_actor_id: assigned_actor_id,
+      metadata: %{
+        "provider_id" => prov.id,
+        "function" => function_name,
+        "arguments" => inspect(arguments)
+      }
+    })
+    {:error, {:assigned_to_human, task.id}}
+  end
+
+  defp dispatch_execution(cap, %Provider{provider_type: "external_app"} = prov, function_name, arguments) do
+    now = DateTime.utc_now()
+    {:ok, _} = LRP.log_event(%{
+      tenant_id: cap.tenant_id,
+      event_type: "capability_externally_dispatched",
+      source: "capability_manager",
+      occurred_at: now,
+      idempotency_key: "dispatch-#{cap.id}-#{function_name}-#{System.system_time(:microsecond)}",
+      payload: %{
+        "provider_id" => prov.id,
+        "provider_type" => "external_app",
+        "function" => function_name,
+        "arguments" => inspect(arguments),
+        "provider_ref" => prov.provider_ref
+      }
+    })
+    {:ok, :dispatched}
+  end
+
+  defp dispatch_execution(cap, %Provider{provider_type: "agent"} = prov, function_name, arguments) do
+    now = DateTime.utc_now()
+    assigned_agent_id = Map.get(prov.provider_ref, "actor_id") || Map.get(prov.provider_ref, :actor_id)
+
+    {:ok, _} = LRP.log_event(%{
+      tenant_id: cap.tenant_id,
+      event_type: "agent_coordination_requested",
+      source: "capability_manager",
+      occurred_at: now,
+      idempotency_key: "agent-coord-#{cap.id}-#{function_name}-#{System.system_time(:microsecond)}",
+      payload: %{
+        "provider_id" => prov.id,
+        "provider_type" => "agent",
+        "agent_actor_id" => assigned_agent_id,
+        "function" => function_name,
+        "arguments" => inspect(arguments)
+      }
+    })
+    {:ok, :coordinated}
+  end
+
+  defp resolve_object_id(tenant_id, arguments) do
+    first_arg = List.first(arguments)
+    
+    cond do
+      is_binary(first_arg) and valid_uuid?(first_arg) and Repo.exists?(from(o in LRP.Object, where: o.id == ^first_arg)) ->
+        first_arg
+        
+      true ->
+        {:ok, obj} = LRP.create_object(%{
+          tenant_id: tenant_id,
+          type: "ProcessExecution",
+          name: "Capability Execution Context"
+        })
+        obj.id
+    end
+  end
+
+  defp valid_uuid?(str) do
+    case Ecto.UUID.cast(str) do
+      {:ok, _} -> true
+      _ -> false
+    end
+  end
 end
