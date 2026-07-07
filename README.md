@@ -62,9 +62,9 @@ applications are built.
 | Source Connector | ✅ Done | Scans files and Git repos to map code architecture to LRP objects |
 | Code Compliance & Codegen | ✅ Done | AST parsers for Elixir/Python and AI-based code modifications/tests |
 | Legacy Modernizer MVP | ✅ Done | CLI task (`mix lrp.modernize`) to scan legacy codebases and generate LRP md specs or Elixir code ([Kılavuz](docs/MODERNIZER.md)) |
-| ReBAC / OpenFGA | 🔲 Planned | ADR-0003 accepted; static Policy table used for now |
-| CQRS Read Views | 🔲 Planned | ADR-0001 accepted; no consumers yet |
-| JSON Patch Versioning | 🔲 Planned | ADR-0002 accepted; full snapshot used today |
+| ReBAC / OpenFGA | ✅ Done | Zanzibar-like hierarchical check (`LRP.check_permission/3`) implemented & tested (ADR-0003) |
+| CQRS Read Views | ✅ Done | Sync/fast view read model implemented & tested (ADR-0001) |
+| JSON Patch Versioning | ✅ Done | RFC 6902 JSON Patch delta versioning & compaction implemented & tested (ADR-0002) |
 | Rust/NIF Analytics | 🔲 Phase 3 | Applied after profiling shows BEAM bottleneck; not before |
 
 ---
@@ -219,7 +219,7 @@ mix lrp.modernize --source /path/to/legacy-app --target elixir --output-dir cust
 ### Testler
 
 ```bash
-mix test   # 8 entegrasyon testi
+mix test   # 37 entegrasyon testi
 ```
 
 The integration tests cover:

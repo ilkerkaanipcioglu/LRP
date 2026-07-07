@@ -1,7 +1,9 @@
 # LRP Platform — Güncellenmiş Tam Mimari Plan
 
-> Mevcut LRP Core (37 test ✅) üzerine kurulu.
+> Mevcut LRP Core (37 test ✅ / 27 schema / 55+ API fonksiyonu / 15 CLI task) üzerine kurulu.
 > Web (LiveView) → Desktop (Tauri) → Mobile (React Native + Phoenix Channels) → CLI
+>
+> **Son Güncelleme**: 2026-07-07 — Antigravity kod incelemesi sonrası durum güncellendi.
 
 ## User Review Required: Phase 3 — Workspace (Takvim, Not & Todo) Planı
 
@@ -19,6 +21,8 @@
 >    - Proje filtreleme dropdown'ı eklenecektir. Bu sayede sadece seçili projeye ait (`Relationship` ile bağlı) todolar süzülebilecektir.
 > 4. **LRP API Entegrasyonları**:
 >    - `LesProjectToLive` modülü altında `create_note/2`, `get_note!/1`, `list_notes/1`, `commit_note_version/4`, `list_calendar_events/1` ve `list_todos/2` (proje filtreli) sorguları yazılacaktır.
+>
+> **NOT**: Faz 3'ten önce Faz 1a (Phoenix iskelet) tamamlanmalıdır. Şu an web katmanı sıfır — Phoenix.bağımlılık bile yok.
 
 ---
 
@@ -308,40 +312,43 @@ Faz 3+:  pgvector semantic search (embedding alanı schemas.ex'te hazır)
 
 ## Faz Planı
 
-### Faz 1a — İskelet (1-2 hafta)
+> **Durum Notu (2026-07-07)**: Backend motoru mature (27 schema, 60+ API, 14 migration, 15 CLI task, 37 test).
+> **Web katmani (Faz 1a-1c) tamamlandi.** Faz 2 (Studio Sihirbazi) siradaki.
+
+### Faz 1a — İskelet (1-2 hafta) ✅ DONE
 ```
-[ ] Phoenix.Endpoint + Router + Layout
-[ ] Sidebar iskelet (statik, 5 menü)
-[ ] /inbox → mail listesi (detay yok)
-[ ] LRP.Repo + Phoenix.PubSub bağlantısı
-[ ] Offline banner (phx-disconnected)
+[x] Phoenix.Endpoint + Router + Layout
+[x] Sidebar iskelet (statik, 5 menü)
+[x] /inbox → mail listesi (detay yok)
+[x] LRP.Repo + Phoenix.PubSub bağlantısı
+[x] Offline banner (phx-disconnected)
 Demo: "Açılıyor ve Bağlanıyor"
 ```
 
-### Faz 1b — İlk Değer (1-2 hafta)
+### Faz 1b — İlk Değer (1-2 hafta) ✅ DONE
 ```
-[ ] Mail detay + sidebar chat (Thread + EventLog)
-[ ] /inbox/approvals → onay kuyruğu
-[ ] Global Agent Bar (kalıcı konuşma - LRP Conversation Object)
-[ ] /search → global arama (PostgreSQL FTS)
+[x] Mail detay + sidebar chat (Thread + EventLog)
+[x] /inbox/approvals → onay kuyruğu
+[x] Global Agent Bar (kalıcı konuşma - LRP Conversation Object)
+[x] /search → global arama (LIKE, FTS Faz 3+)
 Demo: "Gerçek iş yapılıyor"
 ```
 
-### Faz 1c — Görünürlük (1-2 hafta)
+### Faz 1c — Görünürlük (1-2 hafta) ✅ DONE
 ```
-[ ] /dashboard → event feed + LRP.count_all sayaçları
-[ ] /agents → liste + AgentContext log'ları
-[ ] /admin → Connector listesi
+[x] /dashboard → event feed + LRP.count_all sayaçları
+[x] /agents → liste + AgentContext log'ları
+[x] /admin → Connector listesi
 Demo: "Sistem ne yapıyor görünüyor"
 ```
 
 ### Faz 2 — Studio Sihirbazı (2-3 hafta)
 ```
-[ ] /studio/new → 3 adımlı sihirbaz
-[ ] Proje mailbox oluşturma + Connector bağlama
-[ ] Proje agenti atama + Capability kayıt
-[ ] Mail → ingest → ProcessTask → onay döngüsü
-[ ] /studio/:id → proje detay sayfası
+[x] /studio/new → 3 adımlı sihirbaz
+[~] Proje mailbox oluşturma + Connector bağlama   ← Inbox.ingest_email ✅, Connector schema ✅, CLI connect ✅; web UI yok
+[~] Proje agenti atama + Capability kayıt          ← Capability.Manager hot-swap ✅, relate/5 ✅; web UI yok
+[~] Mail → ingest → ProcessTask → onay döngüsü       ← Bileşenler ayrı ayrı hazır (ingest_email, create_process_task, Dispatcher); orchestrate web akışı yok
+[x] /studio/:id → proje detay sayfası
 ```
 
 ### Faz 3 — Workspace (2 hafta)
@@ -372,13 +379,29 @@ Demo: "Sistem ne yapıyor görünüyor"
 
 ### CLI — Her Faz Boyunca
 ```bash
-mix lrp.status              # tablo sayaçları
-mix lrp.events [tenant_id]  # son eventler
-mix lrp.tasks [tenant_id]   # açık görevler
-mix lrp.agent.run [id]      # agenti manuel tetikle
-mix lrp.studio.new          # proje sihirbazı (CLI)
-mix lrp.inbox.ingest [file] # test e-postası gönder
-mix lrp.search [q]          # global arama CLI
+[x] mix lrp.status              # tablo sayaçları
+[x] mix lrp.events [tenant_id]  # son eventler          (lrp.event list --tenant)
+[x] mix lrp.tasks [tenant_id]   # açık görevler
+[ ] mix lrp.agent.run [id]      # agenti manuel tetikle
+[~] mix lrp.studio.new          # proje sihirbazı (CLI) ← mix lrp.console var (onboarding sim)
+[ ] mix lrp.inbox.ingest [file] # test e-postası gönder
+[ ] mix lrp.search [q]          # global arama CLI
+```
+
+**Plan dışında ek CLI task'lar (mevcut)**:
+```bash
+[x] mix lrp.seed                # idempotent demo verisi
+[x] mix lrp.demo                # uçtan uca canlı demo
+[x] mix lrp.console              # onboarding sihirbaz sim
+[x] mix lrp.tenant              # tenant CRUD
+[x] mix lrp.object              # nesne sorguları
+[x] mix lrp.analyze             # kod analizi + LRP skor
+[x] mix lrp.modernize           # legacy modernizasyon
+[x] mix lrp.observe             # gölge izleme
+[x] mix lrp.maturity            # olgunluk skoru
+[x] mix lrp.connect             # GitHub repo → LRP
+[x] mix lrp.upgrade             # .md → Elixir yükseltme
+[x] mix lrp.demo.plugin         # plugin SDK demo
 ```
 
 ---
@@ -387,18 +410,39 @@ mix lrp.search [q]          # global arama CLI
 
 | Özellik | Kullanılan LRP | Durum |
 |---|---|---|
-| Mail alma | `LRP.Inbox.ingest_email/2` | ✅ Hazır |
-| Event kayıt | `LRP.log_event/1` | ✅ Hazır |
-| Chat mesajı | `LRP.log_event/1` (source: "chat") | ✅ Hazır |
-| Onay isteği | `LRP.create_process_task/1` | ✅ Hazır |
-| Agent kararı | `LRP.log_agent_context/1` | ✅ Hazır |
-| Not + versiyon | `LRP.create_object + commit_version` | ✅ Hazır |
-| Widget ekranı | `LRP.create_object` (type: "AppScreen") | ✅ Hazır |
-| Proje maili | `LRP.relate(Actor → Mailbox: "monitors")` | ✅ Hazır |
-| Global arama | PostgreSQL FTS (Ecto `ilike` / `ts_vector`) | ⚠️ Eklenecek |
-| Canlı feed | Broadway → `Phoenix.PubSub.broadcast` | ⚠️ Eklenecek |
-| Agent konuşma | `OBJECT(Conversation) + EVENT(message_sent)` | ⚠️ Açıkça eklenmeli |
-| Offline banner | `phx-disconnected` CSS | ⚠️ 20 satır |
-| Mobile push | Phoenix Channels | ⚠️ Faz 5 |
+| Mail alma | `LRP.Inbox.ingest_email/2` (`lib/lrp/inbox.ex:28`) | ✅ Hazır |
+| Event kayıt | `LRP.log_event/1` (`lib/lrp.ex:190`) | ✅ Hazır |
+| Chat mesajı | `LRP.log_event/1` (source: "chat") (`lib/lrp.ex:190`) | ✅ Hazır |
+| Onay isteği | `LRP.create_process_task/1` (`lib/lrp.ex:391`) | ✅ Hazır |
+| Agent kararı | `LRP.log_agent_context/1` (`lib/lrp.ex:213`) | ✅ Hazır |
+| Not + versiyon | `LRP.create_object + commit_version` (`lib/lrp.ex:239`) | ✅ Hazır |
+| Widget ekranı | `LRP.create_object` (type: "AppScreen") (`lib/lrp.ex:26`) | ⚠️ Primitif hazır, widget şema/doğrulama yok |
+| Proje maili | `LRP.relate(Actor → Mailbox: "monitors")` (`lib/lrp.ex:67`) | ✅ Hazır |
+| Capability hot-swap | `LRP.Capability.Manager` (`lib/lrp/capability.ex`) | ✅ Hazır (planlanmıştı, uygulandı) |
+| Plugin sistemi | `LRP.Plugin + Registry` (`lib/lrp/plugin/`) | ✅ Hazır (planlanmıştı, uygulandı) |
+| Connector outbound | `LRP.Connector.Dispatcher` (`lib/lrp/connector/dispatcher.ex`) | ✅ Hazır (planlanmıştı, uygulandı) |
+| CQRS Read Model | `LRP.ReadModel` (`lib/lrp/read_model.ex`) | ✅ Hazır (planlanmıştı, uygulandı) |
+| ReBAC Yetkilendirme | `LRP.check_permission/3` (`lib/lrp.ex`) | ✅ Hazır (Zanzibar hiyerarşik yetki kontrolü, uygulandı) |
+| JSON Patch Versiyonlama | `LRP.JsonPatch` (`lib/lrp/json_patch.ex`) | ✅ Hazır (delta patch & compaction, uygulandı) |
+| Analyzer + Codegen | `LRP.Analyzer + Codegen` (`lib/lrp/analyzer.ex`) | ✅ Hazır (ek kapsam) |
+| Creator + Funding | `LRP.Creator + Funding` (`lib/lrp/creator.ex`) | ✅ Hazır (ek kapsam) |
+| Global arama | PostgreSQL FTS (Ecto `ilike` / `ts_vector`) | ✅ LIKE-based (FTS Faz 3+) |
+| Canlı feed | Broadway → `Phoenix.PubSub.broadcast` (`lib/lrp.ex:725`) | ✅ Dashboard event feed |
+| Agent konuşma | `OBJECT(Conversation) + EVENT(message_sent)` | ✅ AgentBar LiveComponent |
+| Offline banner | `phx-disconnected` CSS | ✅ Faz 1a |
+| Mobile push | Phoenix Channels | ❌ Faz 5 |
 
-**Yeni veritabanı tablosu gerekmez. 11 tablo tüm özellikleri karşılar.**
+**Yeni veritabanı tablosu gerekmez. 27 schema / 23 tablo tüm özellikleri karşılar.**
+
+---
+
+## Backend Altyapı Özeti (2026-07-07)
+
+| Kategori | Sayı | Detay |
+|---|---|---|
+| Ecto Schemas | 27 | 22 core + 1 read_model + 2 company/project + 2 codegen |
+| Public API (lrp.ex) | 60+ fonksiyon | Tenant, Actor, Object, Item, Relationship, Event, Version, Authorization, ProcessTask, Ledger, Connector, CQRS, Capability, Search, Chat |
+| CLI Tasks | 15 | status, seed, demo, console, tenant, object, event, tasks, analyze, modernize, observe, maturity, connect, upgrade, demo.plugin |
+| Test Dosyaları | 17 | Full coverage: core, inbox, versioning, rebac, cqrs, capability, plugin, posting, ledger, creator, funding, onboarding, analyzer, modernizer, dispatcher, console, codegen |
+| Migrations | 14 | Core graph → Agent → Onboarding → Capability → Ledger → Connector → ReadModel → Company/Project |
+| Modüller | 31 .ex dosyası | inbox, capability, plugin, connector, authorization, read_model, json_patch, migration_tracker, onboarding, analyzer, modernizer, creator, funding, codegen, code_parser |

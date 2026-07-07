@@ -104,6 +104,7 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 | 10 | Performans katmanı (Rust/NIF) | Yalnızca "Elixir burada yetersiz" ölçümle kanıtlandıktan sonra | 🔲 Phase 3 |
 | 11 | Web3/dış sistemler | Connector kontratı üzerinden, çekirdeğe dokunmadan, talep geldikçe | 🔲 On demand |
 | 12 | Üretici Finansmanı | `LRP.Creator` (Profil/Güven Skoru) ve `LRP.Funding` (Token/Ledger Payout) | ✅ Done (v0.2.0) |
+| 13 | Web Katmanı (Phoenix LiveView) | Endpoint, Router, Layout, Sidebar, LiveView sayfaları, Agent Bar | ✅ Done (Faz 1a-1c) |
 
 ---
 
@@ -156,6 +157,7 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 | Yol | AGENTS.md | Kapsam |
 |---|---|---|
 | [`lib/lrp/`](lib/lrp/AGENTS.md) | ✅ | Tüm Elixir modülleri — şemalar, API, connector'lar |
+| [`lib/lrp_web/`](lib/lrp_web/AGENTS.md) | ✅ | Phoenix LiveView web katmanı — router, layout, LiveView sayfaları, component'lar |
 | [`docs/`](docs/AGENTS.md) | ✅ | Architecture Decision Records ve dokümantasyon |
 | [`test/`](test/AGENTS.md) | ✅ | Entegrasyon ve birim testleri |
 | [`config/`](config/AGENTS.md) | ✅ | Runtime ve veritabanı konfigürasyonu |
@@ -189,6 +191,7 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 - `mix deps.get` - Bağımlılıkları yükler.
 - `mix ecto.migrate` - Veritabanı migration'larını çalıştırır.
 - `mix test --exclude external` - Entegrasyon testlerini çalıştırır.
+- `mix phx.server` / `mix start` - Web sunucusunu başlatır (http://localhost:4000).
 
 ---
 

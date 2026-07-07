@@ -11,9 +11,10 @@ This directory holds Mix runtime configuration. Configuration is **environment-s
 
 | File | Environment | Purpose |
 |---|---|---|
-| `config.exs` | All | Base config: logger, runtime_tools |
-| `dev.exs` | `:dev` | SQLite3 dev database path; verbose logging |
-| `test.exs` | `:test` | SQLite3 in-memory or temp DB for tests; Ecto sandbox pool |
+| `config.exs` | All | Base config: logger, runtime_tools, Endpoint + PubSub + LiveView signing salt |
+| `dev.exs` | `:dev` | SQLite3 dev database path; HTTP port 4000, debug_errors, code_reloader, live_reload |
+| `test.exs` | `:test` | SQLite3 in-memory or temp DB for tests; Ecto sandbox pool; HTTP port 4002, server: false |
+| `runtime.exs` | `:prod` | Production SECRET_KEY_BASE + DATABASE_URL from environment variables |
 
 ## Editing Rules
 

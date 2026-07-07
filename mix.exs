@@ -22,6 +22,11 @@ defmodule LRP.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:phoenix, "~> 1.7"},
+      {:phoenix_pubsub, "~> 2.0"},
+      {:phoenix_live_view, "~> 1.0"},
+      {:phoenix_html, "~> 4.0"},
+      {:bandit, "~> 1.0"},
       {:ecto_sql, "~> 3.10"},
       {:ecto_sqlite3, "~> 0.12"},
       {:jason, "~> 1.4"},

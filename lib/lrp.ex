@@ -405,6 +405,115 @@ defmodule LRP do
     Object |> where(tenant_id: ^tenant_id, type: ^type) |> Repo.all()
   end
 
+  @doc "Bir tenant'a ait e-posta document'larını döner. Inbox listesi için."
+  def list_email_documents(tenant_id) do
+    Object
+    |> where(tenant_id: ^tenant_id, type: "Document")
+    |> order_by([desc: :inserted_at])
+    |> Repo.all()
+    |> Enum.filter(fn obj -> obj.metadata["source"] == "email" end)
+  end
+
+  @doc "Belirli bir document'a ait event'leri döner."
+  def list_document_events(document_id) do
+    event_ids =
+      Relationship
+      |> where(to_entity: "Object", to_id: ^document_id, relationship_type: "triggered")
+      |> select([r], r.from_id)
+      |> Repo.all()
+
+    if event_ids == [] do
+      []
+    else
+      Event
+      |> where([e], e.id in ^event_ids)
+      |> order_by([e], desc: e.occurred_at)
+      |> Repo.all()
+    end
+  end
+
+  @doc "Bir nesneye bagli iliskili nesneleri doner."
+  def list_related_objects(object_id) do
+    related_ids =
+      Relationship
+      |> where(to_entity: "Object", to_id: ^object_id)
+      |> select([r], r.from_id)
+      |> Repo.all()
+
+    related_ids
+    |> Enum.map(&LRP.get_object/1)
+    |> Enum.filter(& &1)
+  end
+
+  @doc "Bekleyen onay gorevlerini döner."
+  def list_pending_approvals(tenant_id) do
+    ProcessTask
+    |> where(tenant_id: ^tenant_id, status: "pending")
+    |> order_by([desc: :inserted_at])
+    |> Repo.all()
+  end
+
+  @doc "Global arama: nesneler, eventler ve gorevlerde arar (LIKE, case-insensitive SQLite)."
+  def search(tenant_id, query) when is_binary(query) and byte_size(query) > 0 do
+    q = "%#{query}%"
+
+    objects =
+      Object
+      |> where(tenant_id: ^tenant_id)
+      |> where([o], like(o.name, ^q) or like(o.type, ^q))
+      |> order_by([o], desc: o.inserted_at)
+      |> limit(20)
+      |> Repo.all()
+
+    events =
+      Event
+      |> where(tenant_id: ^tenant_id)
+      |> where([e], like(e.event_type, ^q) or like(e.source, ^q))
+      |> order_by([e], desc: e.occurred_at)
+      |> limit(20)
+      |> Repo.all()
+
+    tasks =
+      ProcessTask
+      |> where(tenant_id: ^tenant_id)
+      |> where([t], like(t.name, ^q) or like(t.process_name, ^q))
+      |> order_by([t], desc: t.inserted_at)
+      |> limit(20)
+      |> Repo.all()
+
+    %{objects: objects, events: events, process_tasks: tasks}
+  end
+
+  def search(_tenant_id, ""), do: %{objects: [], events: [], process_tasks: []}
+
+  @doc "Agent chat mesajlarını listeler."
+  def list_agent_chat_messages(conversation_id \\ nil) do
+    Event
+    |> where(source: "agent_chat", event_type: "message_sent")
+    |> order_by([desc: :inserted_at])
+    |> limit(100)
+    |> Repo.all()
+    |> Enum.filter(fn e ->
+      is_nil(conversation_id) or
+        (is_map(e.payload) and e.payload["conversation_id"] == conversation_id)
+    end)
+  end
+
+  @doc "Agent chat mesajı gönderir."
+  def send_agent_chat_message(tenant_id, conversation_id, message, actor_id \\ "system") do
+    log_event(%{
+      tenant_id: tenant_id,
+      event_type: "message_sent",
+      source: "agent_chat",
+      tier: "DURABLE",
+      payload: %{
+        "conversation_id" => conversation_id,
+        "message" => message,
+        "actor_id" => actor_id
+      }
+    })
+  end
+
   def list_relationships_by_tenant(tenant_id) do
     # Relationships tablosunda doğrudan tenant_id bulunmadığı için 
     # to_id nesnesinin bu tenant'a ait olup olmadığını kontrol eden bir JOIN sorgusu kuruyoruz.
@@ -452,6 +561,22 @@ defmodule LRP do
   @doc "Bir tenant'a ait actor'ları döner."
   def list_actors_by_tenant(tenant_id) do
     Actor |> where(tenant_id: ^tenant_id) |> Repo.all()
+  end
+
+  @doc "Bir tenant'a ait Agent tipi actor'ları döner."
+  def list_agents_by_tenant(tenant_id) do
+    Actor |> where(tenant_id: ^tenant_id, type: "Agent") |> Repo.all()
+  end
+
+  @doc "ID ile actor getirir."
+  def get_actor(id), do: Repo.get(Actor, id)
+
+  @doc "Bir tenant'a ait tum EventSubscription kayitlarini doner."
+  def list_subscriptions(tenant_id) do
+    EventSubscription
+    |> where(tenant_id: ^tenant_id)
+    |> order_by([s], desc: s.inserted_at)
+    |> Repo.all()
   end
 
   @doc "ID ile tenant getirir."
@@ -707,12 +832,22 @@ defmodule LRP do
   end
 
   # ─── Company & Project API ──────────────────────────────────────────────────
+  def create_project(attrs) do
+    %Project{} |> Project.changeset(attrs) |> Repo.insert()
+  end
+
+  def list_projects do
+    Repo.all(Project)
+  end
+
+  def get_project(id), do: Repo.get(Project, id)
+
   def create_company(attrs) do
     %Company{} |> Company.changeset(attrs) |> Repo.insert()
   end
 
-  def create_project(attrs) do
-    %Project{} |> Project.changeset(attrs) |> Repo.insert()
+  def list_companies do
+    Repo.all(Company)
   end
 
   def get_project_database_pool(project_id) do

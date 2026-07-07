@@ -15,7 +15,7 @@ Bu dizin LRP'nin **çekirdek motorudur**: tüm Ecto şemaları, public API yüze
 
 | Dosya | Modül | Sorumluluk |
 |---|---|---|
-| `../../lib/lrp.ex` | `LRP` | Public API — aşağı akış kodunun çağırması gereken tek yüzey |
+| `../../lib/lrp.ex` | `LRP` | Public API — aşağı akış kodunun çağırması gereken tek yüzey (60+ fonksiyon: Tenant, Actor, Object, Item, Relationship, Event, Version, Authorization, ProcessTask, Ledger, Connector, CQRS, Capability, Search, Chat) |
 | `schemas.ex` | `LRP.{Tenant,Actor,Object,Item,Relationship,Event,Policy,ProcessTask,Version,AgentContext,AgentCapability}` | 11 Ecto şema tanımı ve changeset'leri |
 | `application.ex` | `LRP.Application` | OTP Application supervisor |
 | `repo.ex` | `LRP.Repo` | Ecto.Repo (SQLite3 dev, PostgreSQL prod) |
