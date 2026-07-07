@@ -3,7 +3,6 @@ defmodule Mix.Tasks.Lrp.Demo.Plugin do
   alias LRP.CliHelpers, as: H
   alias LRP.Plugin.Registry, as: PluginRegistry
   alias LRP.Capability.Manager, as: CapManager
-  alias LRP.Repo
 
   @shortdoc "Plugin SDK canlı demosu — eklenti mimarisini çalıştırır"
 

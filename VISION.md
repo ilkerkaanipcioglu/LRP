@@ -1,8 +1,70 @@
-# LRP — Vision
+# LRP — Platform Vizyonu
+*Her üretici için. Her ölçekte. Her içerik türünde.*
 
-> **"An AI-native Enterprise Operating System where every business object is an entity,
-> every change is an event, every workflow is explainable,
-> and every decision can be delegated to humans or AI agents."**
+> LRP, bir KOBİ'nin muhasebe sisteminden bir müzisyenin AI stüdyosuna kadar
+> her üreticinin dijital altyapısını kurar, üretimini fonlar,
+> topluluğunu büyümesine ortak eder.
+
+---
+
+## Kim İçin
+
+```
+KOBİ sahibi      → mal/hizmet üretiyor, fatura kesiyor
+Senaryo yazarı   → içerik üretiyor, AI araçları kullanıyor
+YouTuber         → video üretiyor, kanal büyütüyor
+Müzisyen         → şarkı yapıyor, AI ile üretiyor
+Bağımsız yapımcı → dizi/film üretiyor, ekip kuruyor
+Oyun geliştirici → indie oyun yapıyor, asset üretiyor
+```
+
+Hepsi aynı LRP motorunu kullanıyor. Değişen sadece bağlanan araçlar ve üretilen içerik türü.
+
+---
+
+## İki Katman — Herkes İçin Aynı
+
+```
+KATMAN 1: Dijital Altyapı
+  → Mevcut araçlarını bağla
+  → LRP izle, analiz et, sistem kur
+  → Üretim sürecini takip et
+
+KATMAN 2: Topluluk Finansmanı
+  → Projeyi fona sun
+  → Topluluk küçük miktarlarla ortak olur
+  → Gelir gelince otomatik paylaşılır
+```
+
+---
+
+## KATMAN 1: Dijital Altyapı
+
+### KOBİ İçin
+- Bağla: Logo/Luca (muhasebe sync), kobi@lrp.com (email), e-Fatura (GİB)
+- LRP öğrenir: Fatura sıklığı, ödeme döngüleri, stok alım rutinleri
+- LRP önerir: Süreç otomasyonu, kademeli geçiş
+
+### İçerik Üreticisi İçin
+- Bağla: YouTube Studio, Spotify/Deezer, Final Cut/Premiere, Suno/Udio, ChatGPT/Claude, Midjourney, Google Drive
+- LRP öğrenir: İzlenme/dinlenme performansları, yayın ritmi, harcanan prodüksiyon saatleri
+- LRP önerir: İş akışı verimliliği, içerik performans analizi, AI araç bütçe optimizasyonu
+
+---
+
+## KATMAN 2: Topluluk Finansmanı
+
+### Temel Mantık
+1. Üretici projesini LRP'ye tanıtır.
+2. LRP proje **TOKEN**'ı oluşturur.
+3. Topluluk küçük miktarlarla ortak olur.
+4. Gelir gelince (YouTube AdSense, Spotify Royalty, vb.) otomatik paylaşılır.
+
+### Güven Nasıl Sağlanır
+- **Geçmiş performans:** LRP, YouTube/Spotify verilerini doğrulayarak çeker.
+- **Proje kanıtı:** Demo track, senaryo taslağı LRP'de değiştirilemez `OBJECT` olarak saklanır.
+- **Kademeli token:** İş bitirildikçe token ödenir. Üretici durursa kalan token dondurulur.
+- **Topluluk denetimi:** Tüm loglar ve ilerleme şeffaf şekilde izlenebilir.
 
 ---
 
@@ -125,6 +187,34 @@ entity.create() → AI Validation → Duplicate Detection → Risk Scoring → W
 ```
 Request → Classifier → Cheap Model → Reasoning Model → Local LLM → External LLM
 ```
+
+---
+
+## LRP ve LesTupid Entegrasyon Vizyonu (Aptalca Olmayan Sistemler)
+
+Harezm ekosisteminin "aptalca olmayan" (LesTupid) özel dikey çözümleri, LRP'nin çekirdek protokolü (`Object Graph`, `Ledger`, `ReBAC`) üzerinde yeniden inşa edilecek ve LRP kullanan üreticilere modüler eklentiler olarak sunulacaktır.
+
+### Çift Yönlü Erişim Modeli
+
+1. **LesTupid Standalone (Bağımsız Mikro Uygulamalar)**:
+   Kişi ya da kurumlar, tüm LRP altyapısını kurmak zorunda kalmadan yalnızca LesTupid monorepo altındaki bağımsız mikro programları (örneğin sadece `les_wait` bekleme sistemini veya `les_certification` sertifikasyon sistemini) bağımsız birer servis olarak kullanabilirler. Bu modda uygulamalar hafif ve dikey odaklı çalışır.
+   
+2. **LRP Integrated (Bütünsel OS Entegrasyonu)**:
+   Kurumlar LRP üzerinden tüm ekosistemi tek çatı altında çalıştırabilir. Bu bütünsel modda LesTupid dikey uygulamaları LRP'nin `Capability` ve `Provider` kontratlarına bağlanarak:
+   - Ortak tekil Cari/Müşteri (`Party`) kaydını kullanır.
+   - Doğrudan LRP çift taraflı defterine (`Ledger`) finansal işlem post eder.
+   - ReBAC üzerinden ortak yetkilendirme grafiğini paylaşır.
+
+### Yeniden İnşa Edilecek "Aptalca Olmayan" LesTupid Sistemleri
+
+- **Aptalca Olmayan Sertifikasyon (`les_certification`)**:
+  Geleneksel, statik ve kağıt üstü sertifikaların aksine; LRP'nin denetlenebilir `Audit Log` ve `Maturity Score` altyapısı üzerinde çalışarak firmalara gerçek zamanlı, olay bazlı (event-driven) ve kriptografik sertifikasyonlar sunar.
+  
+- **Aptalca Olmayan Bekleme & Kuyruk Yönetimi (`les_wait`)**:
+  Kullanıcıları boş yere bekletmeyen, LRP `ProcessTask` ve zamanlanmış olay (event scheduling) yapılarıyla entegre çalışan akıllı kuyruk ve randevu yönetim sistemi.
+  
+- **Aptalca Olmayan E-Ticaret (`Les_Commerce`)**:
+  Komisyonsuz, doğrudan LRP `Item` (stok) ve `Journal` (çift taraflı yevmiye dağıtımı) modüllerini kullanan, otonom tahsilat ve yansıtma süreçlerine sahip modern ticaret platformu.
 
 ---
 

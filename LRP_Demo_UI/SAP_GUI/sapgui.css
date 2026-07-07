@@ -1,0 +1,580 @@
+/* sapgui.css — Classic SAP GUI ("Blue Crystal" light) chrome, theme tokens & ALV grid classes.
+   All user-facing text is Turkish; these are visual styles only. */
+
+:root {
+  --font: "Segoe UI", Arial, Helvetica, sans-serif;
+  --fs: 12px;
+
+  --win-border: #5b7da3;
+  --titlebar-1: #5a93cf;
+  --titlebar-2: #2c6aa6;
+  --titlebar-text: #ffffff;
+
+  --toolbar-1: #f6f8fa;
+  --toolbar-2: #dbe2e9;
+  --toolbar-border: #aeb8c2;
+
+  --menubar-bg: #eef1f4;
+  --menu-hover: #cfe1f5;
+
+  --line: #b9c4cf;
+  --blue-line: #2e6ca6;
+
+  --strip-1: #d3e1f1;
+  --strip-2: #eef4fb;
+  --strip-text: #103a63;
+
+  --content-bg: #eef1f4;
+  --panel-bg: #ffffff;
+
+  --field-bg: #ffffff;
+  --field-border: #9aa4ae;
+  --field-focus: #3a91d9;
+  --field-readonly: #eef0f2;
+  --field-key: #e8eef7; /* highlighted obligatory/key field (e.g. Şirket kodu) */
+
+  --text: #1b1b1b;
+  --text-muted: #5a636c;
+  --accent: #0a6ebd;
+
+  --alv-header-1: #f3f6f9;
+  --alv-header-2: #dde5ed;
+  --alv-grid-line: #c8d0d8;
+  --alv-zebra: #f4f7fa;
+  --alv-green: #dcecc8; /* current period */
+  --alv-yellow: #fcf2bf; /* comparison period */
+  --alv-total: #e4ecf4;
+  --alv-sel: #c3ddf5;
+
+  /* Likidite Tahmini (forecast) */
+  --fc-cell-warn: #fff3cd; /* amber: below warning threshold */
+  --fc-cell-alert-bd: #c0152f; /* first-negative marker */
+  --fc-overdue-bg: #f3e0e0; /* overdue column tint */
+  --fc-hero-bg: #cfe0f3; /* hero (G) running-balance row */
+  --fc-kpi-bg: #f4f7fa;
+
+  --status-bg: #e7ebef;
+  --status-error-bg: #f9d5d5;
+  --status-success-bg: #dff0d8;
+
+  /* Balance display colors */
+  --bal-green: #2e7d32;
+  --bal-red: #c62828;
+}
+
+* { box-sizing: border-box; }
+
+/* ---- Window Frame -------------------------------------------------------- */
+.sap-window {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--content-bg);
+  border: 1px solid var(--win-border);
+  overflow: hidden;
+}
+
+.sap-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 6px;
+  background: linear-gradient(to bottom, var(--titlebar-1), var(--titlebar-2));
+  color: var(--titlebar-text);
+  font-weight: 600;
+  user-select: none;
+}
+.sap-titlebar .sap-logo {
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-style: italic;
+  color: #ffe680;
+}
+.sap-titlebar .sap-title-text { flex: 1; font-weight: 600; }
+.sap-titlebar .win-btns { display: flex; gap: 4px; }
+.sap-titlebar .win-btn {
+  width: 18px; height: 16px;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+  font-size: 10px; line-height: 1;
+  cursor: default;
+}
+
+/* ---- Menu Bar ------------------------------------------------------------ */
+.sap-menubar {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  background: var(--menubar-bg);
+  border-bottom: 1px solid var(--toolbar-border);
+  padding: 0 4px;
+  user-select: none;
+}
+.sap-menu-item {
+  padding: 2px 8px;
+  cursor: default;
+  border-radius: 2px;
+}
+.sap-menu-item:hover { background: var(--menu-hover); }
+
+/* ---- Toolbars ------------------------------------------------------------ */
+.sap-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 3px;
+  min-height: 30px;
+  padding: 3px 6px;
+  background: linear-gradient(to bottom, var(--toolbar-1), var(--toolbar-2));
+  border-bottom: 1px solid var(--toolbar-border);
+}
+.sap-toolbar .sep {
+  width: 1px; align-self: stretch; margin: 2px 4px;
+  background: var(--toolbar-border);
+}
+.sap-cmd {
+  display: flex; align-items: center;
+  height: 22px; margin-right: 4px;
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+}
+.sap-cmd .ok {
+  width: 22px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e1e7ee;
+  border-right: 1px solid var(--field-border);
+  color: #1f8a3b;
+  font-weight: bold;
+  cursor: pointer;
+}
+.sap-cmd .ok:hover { background: #d0dbe9; }
+.sap-cmd input {
+  width: 120px; height: 20px; border: none; outline: none;
+  font-family: var(--font); font-size: var(--fs); padding: 0 4px;
+}
+
+.sap-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 24px; height: 24px; padding: 0 5px;
+  border: 1px solid transparent; border-radius: 3px;
+  background: transparent; cursor: pointer; color: var(--text);
+  white-space: nowrap;
+}
+.sap-btn:hover { border-color: #9bb8d6; background: #e6eff8; }
+.sap-btn:active { background: #cfe0f3; }
+.sap-btn[disabled] { opacity: 0.4; cursor: default; }
+.sap-btn.with-text { gap: 5px; border: 1px solid #9aa4ae; background: linear-gradient(to bottom, #fff, #e1e7ed); }
+.sap-btn.with-text:hover { background: #f0f4f8; }
+.sap-btn.with-text .label { font-size: var(--fs); }
+.sap-btn svg { width: 14px; height: 14px; display: block; }
+
+/* ---- Program Title Strip ------------------------------------------------- */
+.sap-titlestrip {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 28px; padding: 0 10px;
+  background: linear-gradient(to right, var(--strip-1), var(--strip-2) 70%);
+  border-bottom: 1px solid var(--line);
+  color: var(--strip-text);
+  font-style: italic; font-weight: 700; font-size: 14px;
+}
+
+/* ---- Application Toolbar ------------------------------------------------- */
+.sap-apptoolbar {
+  display: flex; align-items: center; gap: 3px;
+  flex-wrap: nowrap; overflow-x: auto;
+  min-height: 30px; padding: 3px 6px;
+  background: var(--menubar-bg);
+  border-bottom: 1px solid var(--toolbar-border);
+}
+.sap-apptoolbar:empty { display: none; }
+
+/* ---- Content + Status ---------------------------------------------------- */
+.sap-content {
+  flex: 1; overflow: auto; padding: 10px 12px;
+  background: var(--content-bg);
+}
+.sap-statusbar {
+  display: flex; align-items: center; gap: 10px;
+  height: 22px; padding: 0 8px;
+  background: var(--status-bg);
+  border-top: 1px solid var(--toolbar-border);
+  color: var(--text-muted); font-size: 11px;
+  user-select: none;
+}
+.sap-statusbar .msg {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sap-statusbar .msg.error {
+  background-color: var(--status-error-bg);
+  color: #b00020;
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+.sap-statusbar .msg.success {
+  background-color: var(--status-success-bg);
+  color: #1f7a34;
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+.sap-statusbar .msg.warning { color: #8a5a00; font-weight: 600; }
+.sap-statusbar .seg { padding: 0 8px; border-left: 1px solid var(--toolbar-border); flex-shrink: 0; }
+
+/* ---- Generic Push Buttons ------------------------------------------------ */
+.btn {
+  font-family: var(--font); font-size: var(--fs);
+  height: 24px; padding: 0 12px;
+  border: 1px solid var(--field-border); border-radius: 3px;
+  background: linear-gradient(to bottom, #ffffff, #e7ecf1);
+  cursor: pointer; color: var(--text);
+}
+.btn:hover { background: linear-gradient(to bottom, #ffffff, #d7e3f0); }
+.btn:active { background: #cfe0f3; }
+.btn.primary { border-color: #2c6aa6; }
+
+/* ---- Dialogs / Popups ---------------------------------------------------- */
+.sap-overlay {
+  position: fixed; inset: 0; background: rgba(20, 30, 45, 0.28);
+  display: none; place-items: center; z-index: 50;
+}
+.sap-dialog {
+  background: var(--content-bg);
+  border: 1px solid var(--win-border);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  min-width: 420px; max-width: 92vw; max-height: 88vh;
+  display: flex; flex-direction: column;
+}
+.sap-dialog .dlg-title {
+  display: flex; align-items: center; gap: 8px;
+  height: 24px; padding: 0 8px;
+  background: linear-gradient(to bottom, var(--titlebar-1), var(--titlebar-2));
+  color: #fff; font-weight: 600;
+}
+.sap-dialog .dlg-title .t { flex: 1; }
+.sap-dialog .dlg-title .x {
+  width: 18px; height: 16px; display: grid; place-items: center;
+  background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 2px; cursor: pointer; font-size: 10px;
+}
+.sap-dialog .dlg-body { padding: 10px 12px; overflow: auto; }
+.sap-dialog .dlg-footer {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 8px 12px; border-top: 1px solid var(--line);
+}
+.dlg-note {
+  background: #fbf7e3; border: 1px solid #e3d9a8;
+  padding: 6px 8px; margin-bottom: 8px; color: #5a4f1e; font-size: 11px;
+}
+
+/* ---- Selection Screen Controls ------------------------------------------- */
+.ss-screen { max-width: 1100px; }
+.ss-frame {
+  border: 1px solid var(--line);
+  background: var(--panel-bg);
+  margin: 0 0 14px;
+  border-radius: 2px;
+}
+.ss-frame-title {
+  padding: 3px 8px;
+  font-weight: 600;
+  color: var(--strip-text);
+  border-bottom: 2px solid var(--blue-line);
+  background: linear-gradient(to bottom, #fbfdff, #eef3f9);
+}
+.ss-grid-header {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  padding: 10px;
+}
+.ss-rows { padding: 8px 10px; }
+.ss-row {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+}
+.ss-row + .ss-row { border-top: 1px dotted #e2e6ea; }
+.ss-label {
+  width: 200px;
+  flex: 0 0 200px;
+  color: var(--text);
+  padding-right: 8px;
+}
+.ss-controls { display: flex; align-items: center; gap: 6px; flex: 1; }
+
+.ss-input {
+  height: 20px;
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+  font-family: var(--font);
+  font-size: var(--fs);
+  padding: 0 4px;
+  color: var(--text);
+}
+.ss-input:focus {
+  outline: none;
+  border-color: var(--field-focus);
+  box-shadow: 0 0 0 1px var(--field-focus) inset;
+}
+.ss-input.key {
+  background: var(--field-key);
+  font-weight: 700;
+  color: #14365c;
+}
+.ss-input.ro {
+  background: var(--field-readonly);
+  color: var(--text-muted);
+}
+.ss-input:disabled,
+.ss-select:disabled {
+  background: var(--field-readonly);
+  color: var(--text-muted);
+  cursor: default;
+}
+.ss-select {
+  height: 22px;
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+  font-family: var(--font);
+  font-size: var(--fs);
+}
+.ss-select:focus { outline: none; border-color: var(--field-focus); }
+
+/* Search help, ranges, checkboxes */
+.ss-help {
+  width: 22px; height: 22px; display: grid; place-items: center;
+  border: 1px solid var(--field-border);
+  background: linear-gradient(to bottom, #f8fbff, #dfe8f2);
+  cursor: pointer; border-radius: 2px; padding: 0;
+}
+.ss-help:hover { background: #cfe0f3; border-color: #5a7fb0; }
+.ss-help svg { width: 15px; height: 15px; }
+
+.ss-help-body { max-width: 520px; color: var(--text); line-height: 1.35; }
+.ss-help-body p { margin: 0 0 8px; }
+.ss-help-body ul { margin: 0; padding-left: 18px; }
+.ss-help-body li { margin: 0 0 6px; }
+
+.ss-selopt { display: flex; align-items: center; gap: 6px; }
+.ss-to { color: var(--text-muted); padding: 0 2px; }
+.ss-mc {
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border: 1px solid var(--field-border);
+  background: linear-gradient(to bottom, #fffefb, #f0e6c8);
+  cursor: pointer; border-radius: 2px; padding: 0;
+}
+.ss-mc:hover { background: #fbedc4; }
+.ss-mc svg { width: 14px; height: 14px; }
+
+.ss-hint { color: var(--text-muted); font-size: 11px; padding: 2px 0 0 200px; }
+.ss-note { color: var(--text-muted); font-size: 11px; }
+
+.ss-check-row { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; margin-right: 18px; }
+.ss-check-row.disabled { color: var(--text-muted); cursor: default; }
+.ss-check { width: 14px; height: 14px; accent-color: var(--accent); }
+.ss-check-lbl { color: var(--text); }
+.ss-check-row.disabled .ss-check-lbl { color: var(--text-muted); }
+
+.ss-input[type="date"] { height: 22px; }
+
+/* ---- ALV Grid Look ------------------------------------------------------- */
+.alv-wrap {
+  background: var(--panel-bg);
+  border: 1px solid var(--alv-grid-line);
+  display: flex;
+  flex-direction: column;
+}
+.alv-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--fs);
+  background: var(--panel-bg);
+}
+.alv-th {
+  position: sticky; top: 0; z-index: 2;
+  text-align: left; font-weight: 600; color: #1f3a57;
+  padding: 4px 8px;
+  background: linear-gradient(to bottom, var(--alv-header-1), var(--alv-header-2));
+  border: 1px solid var(--alv-grid-line);
+  border-top: none;
+  cursor: pointer; white-space: nowrap; user-select: none;
+}
+.alv-th.r { text-align: right; }
+.alv-td {
+  padding: 2px 8px;
+  border: 1px solid var(--alv-grid-line);
+  border-top: none;
+  white-space: nowrap;
+  color: var(--text);
+  vertical-align: middle;
+}
+.alv-td.r { text-align: right; }
+.alv-tr:nth-child(even) .alv-td { background: var(--alv-zebra); }
+.alv-tr:hover .alv-td { background: #eef6ff; }
+.alv-tr.sel .alv-td { background: var(--alv-sel) !important; }
+
+/* tree hierarchy column */
+.alv-td.tree { display: flex; align-items: center; gap: 2px; }
+.alv-indent { display: inline-block; flex: none; }
+.alv-toggle {
+  display: inline-grid; place-items: center;
+  width: 14px; height: 14px; flex: none;
+  color: #4a6585; font-size: 9px; cursor: pointer;
+}
+.alv-toggle.leaf { cursor: default; }
+.alv-cashid { font-weight: 600; color: #234; }
+
+/* amounts */
+.alv-td.amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.alv-td.amount.neg { color: #c0152f; }
+.alv-td.amount.green { background: var(--alv-green); }
+.alv-td.amount.yellow { background: var(--alv-yellow); }
+
+/* subtotals */
+.alv-tr.total .alv-td { font-weight: 700; background: var(--alv-total); }
+.alv-tr.total:nth-child(even) .alv-td { background: var(--alv-total); }
+.alv-tr.total .alv-td.amount.green { background: #cfe2b4; }
+.alv-tr.total .alv-td.amount.yellow { background: #f6e79a; }
+.alv-tr.grand .alv-td {
+  font-weight: 800;
+  background: #cfe0f3;
+  border-top: 2px solid #6a90bd;
+  border-bottom: 2px solid #6a90bd;
+}
+.alv-tr.grand .alv-td.amount { background: #bcd6f0; }
+
+.alv-input {
+  width: 100%; height: 20px;
+  border: 1px solid transparent; background: transparent;
+  font-family: var(--font); font-size: var(--fs); padding: 0 4px;
+}
+.alv-input:focus { background: var(--field-bg); border-color: var(--field-focus); outline: none; }
+.alv-input:hover:not(:focus) { border-color: #d1d5db; background: rgba(255, 255, 255, 0.5); }
+
+.alv-status-icon {
+  width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin: 0 auto;
+}
+.alv-status-icon.red { background: #c62828; box-shadow: 0 0 2px #c62828; }
+.alv-status-icon.green { background: #2e7d32; box-shadow: 0 0 2px #2e7d32; }
+
+.btn-del {
+  background: transparent; border: none; color: #b00020; cursor: pointer; padding: 2px;
+  border-radius: 3px; display: flex; align-items: center; justify-content: center;
+}
+.btn-del:hover { background: #f9d5d5; }
+
+/* Totals bar (Yevmiye) */
+.alv-totals-bar {
+  display: flex; justify-content: flex-end; align-items: center; gap: 20px;
+  padding: 8px 12px; background: var(--alv-header-1); border-top: 1px solid var(--alv-grid-line);
+  font-weight: bold;
+}
+.total-item { display: flex; gap: 6px; }
+.total-val { font-variant-numeric: tabular-nums; }
+.total-val.balance-green { color: var(--bal-green); }
+.total-val.balance-red { color: var(--bal-red); }
+
+/* ---- Likidite Tahmini (forecast) ----------------------------------------- */
+.fc-wrap { border: none; background: transparent; }
+.fc-kpi-band {
+  display: flex; gap: 8px; flex-wrap: wrap; padding: 8px;
+  background: var(--panel-bg); border: 1px solid var(--alv-grid-line); border-bottom: none;
+}
+.fc-kpi {
+  flex: 1 1 0; min-width: 150px;
+  border: 1px solid var(--alv-grid-line); background: var(--fc-kpi-bg); padding: 6px 10px;
+}
+.fc-kpi-lbl { font-size: 11px; color: var(--text-muted); }
+.fc-kpi-val {
+  font-size: 17px; font-weight: 700; color: #14365c;
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum";
+}
+.fc-kpi-val.neg { color: #c0152f; }
+.fc-kpi-sub { font-size: 10px; color: var(--text-muted); }
+.fc-kpi.warn { background: var(--fc-cell-warn); }
+.fc-kpi.alert { border-color: var(--fc-cell-alert-bd); box-shadow: 0 0 0 1px var(--fc-cell-alert-bd) inset; }
+.fc-kpi.alert .fc-kpi-val { color: #c0152f; }
+
+.alv-td.amount.warn { background: var(--fc-cell-warn); }
+.alv-td.amount.alert {
+  background: #f7d2d6; font-weight: 700; box-shadow: 0 0 0 2px var(--fc-cell-alert-bd) inset;
+}
+.alv-td.amount.fc-overdue { background: var(--fc-overdue-bg); }
+.alv-th.fc-overdue { background: var(--fc-overdue-bg); }
+.alv-td.amount.fc-document-source:not(.warn):not(.alert) { background: #e8f2df; }
+.alv-td.amount.fc-manual-source:not(.warn):not(.alert) { background: #e9ddf3; }
+.alv-td.amount.fc-mixed-source:not(.warn):not(.alert) { background: #dbe9f7; }
+.fc-kpi.manual { background: #e9ddf3; }
+.alv-tr.fc-hero .alv-td {
+  font-weight: 800; background: var(--fc-hero-bg); border-top: 2px solid #6a90bd; border-bottom: 2px solid #6a90bd;
+}
+.alv-tr.fc-hero .alv-td.amount { background: #bcd6f0; }
+.alv-tr.fc-hero .alv-td.amount.neg { color: #c0152f; }
+.alv-tr.fc-hero .alv-td.amount.warn { background: var(--fc-cell-warn); }
+.alv-tr.fc-hero .alv-td.amount.alert { background: #f7d2d6; }
+
+/* ---- Document View (FB03) ------------------------------------------------ */
+.fb-toolbar {
+  display: flex; align-items: center; gap: 3px;
+  min-height: 28px; padding: 3px 6px; margin-bottom: 8px;
+  background: linear-gradient(to bottom, var(--toolbar-1), var(--toolbar-2));
+  border: 1px solid var(--toolbar-border);
+}
+.fb-toolbar .sep { width: 1px; align-self: stretch; margin: 2px 5px; background: var(--toolbar-border); }
+.fb-toolbar.grid { margin: 0; border-bottom: none; gap: 6px; }
+.fb-toolbar.grid svg { width: 16px; height: 16px; }
+
+.fb-group {
+  position: relative; border: 1px solid var(--line); background: var(--panel-bg);
+  padding: 14px 12px 10px; margin-bottom: 10px;
+}
+.fb-group-title {
+  position: absolute; top: -9px; left: 10px; background: var(--content-bg); padding: 0 6px;
+  font-weight: 600; color: var(--text);
+}
+.fb-header {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 18px;
+}
+.fb-field { display: flex; gap: 8px; align-items: center; }
+.fb-lbl { width: 104px; flex: none; color: var(--text); }
+.fb-val {
+  font-weight: 400; color: #14365c;
+  border: 1px solid var(--field-border); background: #eef0f2;
+  padding: 1px 6px; min-width: 84px; min-height: 19px; line-height: 17px;
+  display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fb-chk { margin: 0 4px; }
+.fb-grid-wrap { border: 1px solid var(--toolbar-border); }
+.fb-grid tr.sel td { background: #fbe6bf !important; }
+.fb-grid td, .fb-grid th { padding: 2px 8px; }
+
+.doc-table { border-collapse: collapse; width: 100%; font-size: var(--fs); }
+.doc-table th {
+  text-align: left; padding: 3px 8px; background: var(--alv-header-2);
+  border: 1px solid var(--alv-grid-line); white-space: nowrap;
+}
+.doc-table td { padding: 2px 8px; border: 1px solid var(--alv-grid-line); white-space: nowrap; }
+.doc-table td.r, .doc-table th.r { text-align: right; }
+.doc-table tr.clickable { cursor: pointer; }
+.doc-table tr.clickable:hover td { background: #eef6ff; }
+.doc-hotspot { color: #0a5ca8; text-decoration: underline; cursor: pointer; }

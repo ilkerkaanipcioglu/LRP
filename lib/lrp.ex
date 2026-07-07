@@ -10,6 +10,7 @@ defmodule LRP do
   alias LRP.{AgentContext, AgentCapability}
   alias LRP.{Ledger, Journal, JournalLine, FiscalPeriod}
   alias LRP.{Connector, EventSubscription, PostingRule}
+  alias LRP.{Company, Project}
 
   # ─── Tenant API ─────────────────────────────────────────────────────────────
   def create_tenant(attrs) do
@@ -193,6 +194,7 @@ defmodule LRP do
         if event.event_type != "webhook_delivery_failed" do
           LRP.Connector.Dispatcher.dispatch(event)
           process_posting_rules(event)
+          broadcast_event(event)
         end
         {:ok, event}
       error ->
@@ -702,6 +704,31 @@ defmodule LRP do
   # ─── Capability Execution Routing API (ADR-0004) ─────────────────────────────
   def execute_capability(tenant_id, capability_type, function_name, arguments) do
     LRP.Capability.Manager.execute_capability(tenant_id, capability_type, function_name, arguments)
+  end
+
+  # ─── Company & Project API ──────────────────────────────────────────────────
+  def create_company(attrs) do
+    %Company{} |> Company.changeset(attrs) |> Repo.insert()
+  end
+
+  def create_project(attrs) do
+    %Project{} |> Project.changeset(attrs) |> Repo.insert()
+  end
+
+  def get_project_database_pool(project_id) do
+    case Repo.get(Project, project_id) do
+      nil -> nil
+      project -> project.database_url
+    end
+  end
+
+  defp broadcast_event(event) do
+    if pubsub_server = Application.get_env(:lrp, :pubsub_server) do
+      if Code.ensure_loaded?(Phoenix.PubSub) do
+        Phoenix.PubSub.broadcast(pubsub_server, "tenant:#{event.tenant_id}:events", {:lrp_event, event})
+      end
+    end
+    :ok
   end
 end
 

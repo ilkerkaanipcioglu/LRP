@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HRP Ürün Yönetim Konsolu — Density with Clarity</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%236366f1'/%3E%3Cpath d='M3 5h10M3 8h10M3 11h7' stroke='white' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="hrp.css" />
+    <style>
+      /* Layout specific overrides for Demo view */
+      .layout-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+      }
+      
+      .table-form-container {
+        display: flex;
+        gap: var(--space-md);
+        flex: 1;
+        overflow: hidden;
+      }
+      
+      .form-drawer {
+        width: 320px;
+        background-color: var(--bg-panel);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--space-md);
+        display: none;
+        flex-direction: column;
+        gap: var(--space-md);
+        flex-shrink: 0;
+        box-shadow: var(--shadow-md);
+        overflow-y: auto;
+      }
+      
+      .form-drawer.active {
+        display: flex;
+        animation: slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      
+      @keyframes slide-in {
+        from { transform: translateX(50px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hrp-layout">
+      <!-- SIDEBAR -->
+      <aside class="hrp-sidebar">
+        <div class="hrp-brand">
+          <div class="hrp-logo-mark">H</div>
+          <span class="hrp-brand-name">Harezm HRP</span>
+        </div>
+        <nav class="hrp-nav">
+          <div class="hrp-nav-item" onclick="changeMenu(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>Gösterge Paneli</div>
+          <div class="hrp-nav-item active" onclick="changeMenu(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>Ürün Listesi</div>
+          <div class="hrp-nav-item" onclick="changeMenu(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>Satış Fişleri</div>
+          <div class="hrp-nav-item" onclick="changeMenu(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Müşteriler</div>
+          <div class="hrp-nav-item" onclick="changeMenu(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Sistem Ayarları</div>
+        </nav>
+        <div class="hrp-sidebar-footer">
+          <div style="display:flex; flex-direction:column;">
+            <span style="font-weight:600; font-size:11px;">İlker Kaan İpçioğlu</span>
+            <span style="font-size:10px; color:var(--text-muted);">Rol: CFO / Power User</span>
+          </div>
+          <div class="hrp-perf-badge" title="Tüm arayüz geçişleri anlık reaktiftir.">
+            ⚡ 3ms
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN APP BODY -->
+      <div class="layout-container">
+        <!-- TOP CONTEXT BAR -->
+        <header class="hrp-topbar">
+          <div class="hrp-topbar-left">
+            <div class="hrp-context-selects">
+              <select class="hrp-select" style="height:32px; padding:0 8px; font-weight:600;" id="context-company">
+                <option value="TR10">TR10 — Harezm A.Ş.</option>
+                <option value="EU20">EU20 — Harezm GmbH</option>
+              </select>
+              <select class="hrp-select" style="height:32px; padding:0 8px; font-size:11px;" id="context-period">
+                <option value="2026-07">Dönem: 07.2026</option>
+                <option value="2026-06">Dönem: 06.2026</option>
+              </select>
+            </div>
+            <!-- Global Fuzzy Search Trigger -->
+            <div class="hrp-search-trigger" id="global-search-trigger" title="Komut paletini aç (Ctrl+K)">
+              <span style="font-size:11px; display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                Hızlı arama veya komutlar...
+              </span>
+              <span class="hrp-shortcut-badge">Ctrl K</span>
+            </div>
+          </div>
+          
+          <div class="hrp-topbar-right">
+            <!-- Accent Color Selection -->
+            <div style="display:flex; align-items:center; gap:4px; background:var(--bg-surface); padding:4px 8px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+              <span style="font-size:10px; color:var(--text-muted); margin-right:4px;">Tema:</span>
+              <div onclick="setAccent('hsl(250, 84%, 66%)')" style="width:12px; height:12px; border-radius:50%; background:hsl(250, 84%, 66%); cursor:pointer;" title="Digital Indigo"></div>
+              <div onclick="setAccent('hsl(150, 80%, 40%)')" style="width:12px; height:12px; border-radius:50%; background:hsl(150, 80%, 40%); cursor:pointer;" title="Emerald Green"></div>
+              <div onclick="setAccent('hsl(340, 85%, 55%)')" style="width:12px; height:12px; border-radius:50%; background:hsl(340, 85%, 55%); cursor:pointer;" title="Rose Pink"></div>
+              <div onclick="setAccent('hsl(38, 92%, 50%)')" style="width:12px; height:12px; border-radius:50%; background:hsl(38, 92%, 50%); cursor:pointer;" title="Amber Yellow"></div>
+            </div>
+            
+            <!-- Dark / Light Theme Toggle -->
+            <button class="hrp-btn hrp-btn-secondary" style="height:32px; width:32px; padding:0;" id="theme-toggle-btn" title="Gece / Gündüz Modu">
+              🌙
+            </button>
+          </div>
+        </header>
+
+        <!-- WORKSPACE -->
+        <main class="hrp-workspace">
+          <!-- Breadcrumb -->
+          <div class="hrp-breadcrumb">
+            <a href="#">Ana Sayfa</a> / <a href="#">Stok Yönetimi</a> / <span>Ürün Listesi</span>
+          </div>
+
+          <!-- View Title Block -->
+          <div class="hrp-view-header">
+            <div class="hrp-view-title">
+              <h1>Ürün Yönetim Konsolu</h1>
+              <p>HRP standartlarında reaktif veri giriş arayüzü ve akıllı grid.</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="hrp-btn hrp-btn-secondary" onclick="exportData()" title="Verileri CSV formatında indir">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Dışa Aktar
+              </button>
+              <button class="hrp-btn hrp-btn-primary" id="btn-toggle-form" title="Yeni ürün ekleme panelini aç">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Yeni Ürün Ekle
+              </button>
+            </div>
+          </div>
+
+          <!-- TABLE AND SIDE FORM LAYOUT -->
+          <div class="table-form-container">
+            <!-- Grid Card -->
+            <div class="hrp-card" style="flex:1;">
+              <!-- Saved Views & Density control bar -->
+              <div class="hrp-table-control-bar">
+                <div class="hrp-tabs">
+                  <div class="hrp-tab active" id="tab-all" onclick="filterTab('all')">Tüm Ürünler</div>
+                  <div class="hrp-tab" id="tab-critical" onclick="filterTab('critical')">Stok Kritik (&lt; 20)</div>
+                  <div class="hrp-tab" id="tab-services" onclick="filterTab('service')">Hizmetler</div>
+                  <div class="hrp-tab" id="tab-inactive" onclick="filterTab('inactive')">Pasif Kayıtlar</div>
+                </div>
+
+                <div class="hrp-table-actions">
+                  <span style="font-size:11px; color:var(--text-muted);">Yoğunluk:</span>
+                  <!-- Density switcher buttons -->
+                  <div class="hrp-density-control">
+                    <button class="hrp-density-btn" id="density-spacious" onclick="setDensity('spacious')">Spacious</button>
+                    <button class="hrp-density-btn active" id="density-comfortable" onclick="setDensity('comfortable')">Comfortable</button>
+                    <button class="hrp-density-btn" id="density-compact" onclick="setDensity('compact')">Compact</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Data Table Wrapper -->
+              <div class="hrp-table-wrapper">
+                <table class="hrp-table" id="products-table">
+                  <thead>
+                    <tr>
+                      <th class="hrp-th" style="width: 40px; text-align: center;">
+                        <input type="checkbox" class="hrp-checkbox" id="header-select-all" />
+                      </th>
+                      <th class="hrp-th sortable" style="width: 100px;" onclick="sortTable('id')">Kayıt ID ↕</th>
+                      <th class="hrp-th sortable" onclick="sortTable('name')">Ürün Adı (Düzenle) ↕</th>
+                      <th class="hrp-th sortable" style="width: 160px;" onclick="sortTable('category')">Kategori (Düzenle) ↕</th>
+                      <th class="hrp-th sortable number" style="width: 140px;" onclick="sortTable('price')">Birim Fiyat ↕</th>
+                      <th class="hrp-th sortable number" style="width: 120px;" onclick="sortTable('stock')">Stok Miktarı ↕</th>
+                      <th class="hrp-th" style="width: 120px;">Durum</th>
+                    </tr>
+                  </thead>
+                  <tbody id="products-table-body">
+                    <!-- Dynamic rows injected here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SIDE FORM DRAWER (Progressive Disclosure) -->
+            <div class="form-drawer" id="product-form-drawer">
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                <h3 style="font-family:var(--font-display); font-weight:600; font-size:14px;">Yeni Kayıt Formu</h3>
+                <button class="hrp-btn hrp-btn-ghost" id="btn-close-form" style="padding:4px; min-width:auto;">✕</button>
+              </div>
+
+              <!-- Main vertical form -->
+              <form id="new-product-form" onsubmit="handleFormSubmit(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <div class="hrp-input-group">
+                  <label class="hrp-label" for="form-name">Ürün / Hizmet Adı</label>
+                  <input type="text" id="form-name" class="hrp-input" required placeholder="Örn: 24 Port Gigabit Switch" />
+                </div>
+
+                <div class="hrp-input-group">
+                  <label class="hrp-label" for="form-category">Kategori</label>
+                  <select id="form-category" class="hrp-select" required>
+                    <option value="Donanım">Donanım (Hardware)</option>
+                    <option value="Yazılım">Yazılım Lisans</option>
+                    <option value="Hizmet">Hizmet / Danışmanlık</option>
+                    <option value="Sarf Malzeme">Sarf Malzemeleri</option>
+                  </select>
+                </div>
+
+                <div class="hrp-input-group">
+                  <label class="hrp-label" for="form-price">Birim Fiyat (TRY)</label>
+                  <!-- Form validation: check price onblur -->
+                  <input type="number" id="form-price" class="hrp-input" step="0.01" required placeholder="0.00" onblur="validateField(this)" />
+                  <div class="hrp-validation-msg" id="validation-price" style="display:none;"></div>
+                </div>
+
+                <div class="hrp-input-group">
+                  <label class="hrp-label" for="form-stock">Başlangıç Stok Seviyesi</label>
+                  <input type="number" id="form-stock" class="hrp-input" required placeholder="0" onblur="validateField(this)" />
+                  <div class="hrp-validation-msg" id="validation-stock" style="display:none;"></div>
+                </div>
+
+                <!-- PROGRESSIVE DISCLOSURE SECTION -->
+                <div class="hrp-progressive-disclosure">
+                  <div class="hrp-disclosure-header" id="disclosure-header">
+                    <span>Gelişmiş Defter Bilgileri</span>
+                    <span id="disclosure-arrow">▼</span>
+                  </div>
+                  <div class="hrp-disclosure-body" id="disclosure-body">
+                    <div class="hrp-input-group" style="margin-bottom:8px;">
+                      <label class="hrp-label" for="form-vat">KDV Kodu</label>
+                      <select id="form-vat" class="hrp-select">
+                        <option value="KDV20" selected>KDV %20 (Standart)</option>
+                        <option value="KDV10">KDV %10 (Gıda/Tıbbi)</option>
+                        <option value="KDV01">KDV %1 (Temel)</option>
+                        <option value="KDV00">KDV %0 (Muaf)</option>
+                      </select>
+                    </div>
+                    <div class="hrp-input-group">
+                      <label class="hrp-label" for="form-unit">Birim</label>
+                      <select id="form-unit" class="hrp-select">
+                        <option value="Adet" selected>Adet (pcs)</option>
+                        <option value="Saat">Saat (hours)</option>
+                        <option value="Kutu">Kutu (box)</option>
+                        <option value="Lisans">Lisans (license)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                  <button type="button" class="hrp-btn hrp-btn-secondary" id="btn-form-cancel">Temizle</button>
+                  <button type="submit" class="hrp-btn hrp-btn-primary">Kaydet (Optimistic)</button>
+                </div>
+              </form>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:10px; text-align:center;" id="form-autosave-status">
+                Değişiklikler otomatik kaydedilir.
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- BULK ACTIONS BAR (Fixed bottom overlay) -->
+    <div class="hrp-bulk-actions-bar" id="bulk-bar">
+      <span style="font-size:12px; font-weight:600; border-right: 1px solid var(--border-color); padding-right:12px;" id="bulk-count-text">
+        [0] Satır Seçildi
+      </span>
+      <button class="hrp-btn hrp-btn-secondary" onclick="bulkAction('activate')" style="height:32px;">
+        🔓 Aktifleştir
+      </button>
+      <button class="hrp-btn hrp-btn-secondary" onclick="bulkAction('deactivate')" style="height:32px;">
+        🔒 Pasif Et
+      </button>
+      <button class="hrp-btn" style="height:32px; background:var(--color-error-bg); color:var(--color-error); border:1px solid rgba(220,38,38,0.2);" onclick="bulkAction('delete')">
+        🗑️ Sil
+      </button>
+      <button class="hrp-btn hrp-btn-ghost" onclick="clearSelection()" style="height:32px; padding:0 8px;">
+        İptal
+      </button>
+    </div>
+
+    <!-- COMMAND PALETTE OVERLAY (Ctrl+K) -->
+    <div class="hrp-cmd-overlay" id="command-overlay">
+      <div class="hrp-cmd-box">
+        <div class="hrp-cmd-search-wrap">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" class="hrp-cmd-search-input" id="cmd-search-input" placeholder="Bir komut veya eylem arayın (örn: Spacious, Koyu)..." />
+          <span class="hrp-shortcut-badge">ESC</span>
+        </div>
+        <div class="hrp-cmd-results" id="cmd-results-list">
+          <!-- Command options populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+      // Initial dataset
+      let products = [
+        { id: "LRP-1001", name: "24 Port Gigabit PoE Switch", category: "Donanım", price: 14500.00, stock: 15, status: "Kritik" },
+        { id: "LRP-1002", name: "LRP Developer Core License (1 Yıllık)", category: "Yazılım", price: 48000.00, stock: 999, status: "Aktif" },
+        { id: "LRP-1003", name: "Swarm AI Agent Mesh Entegrasyon Desteği", category: "Hizmet", price: 8500.00, stock: 24, status: "Aktif" },
+        { id: "LRP-1004", name: "Cat6 Ethernet Yama Kablosu (2m, Mavi)", category: "Sarf Malzeme", price: 180.00, stock: 8, status: "Kritik" },
+        { id: "LRP-1005", name: "Activepieces Bulut Connector Aboneliği", category: "Yazılım", price: 12000.00, stock: 0, status: "Pasif" },
+        { id: "LRP-1006", name: "Endüstriyel IoT Ağ Geçidi (Gateway v2)", category: "Donanım", price: 29800.00, stock: 45, status: "Aktif" },
+        { id: "LRP-1007", name: "Custom ERP Audit / Raporlama Danışmanlığı", category: "Hizmet", price: 18000.00, stock: 120, status: "Aktif" }
+      ];
+
+      // Copy for resetting / filtering
+      let displayProducts = [...products];
+      let selectedIds = new Set();
+      let activeTab = 'all';
+      let sortKey = 'id';
+      let sortAsc = true;
+
+      const tbody = document.getElementById('products-table-body');
+      const headerSelectAll = document.getElementById('header-select-all');
+      const bulkBar = document.getElementById('bulk-bar');
+      const bulkCountText = document.getElementById('bulk-count-text');
+      const formDrawer = document.getElementById('product-form-drawer');
+      const btnToggleForm = document.getElementById('btn-toggle-form');
+      const btnCloseForm = document.getElementById('btn-close-form');
+      const overlayCmd = document.getElementById('command-overlay');
+      const inputCmdSearch = document.getElementById('cmd-search-input');
+      const listCmdResults = document.getElementById('cmd-results-list');
+
+      // Command palette options list
+      const commandOptions = [
+        { title: "Grid Yoğunluğu: Compact (Sıkışık)", cmd: "density-compact", shortcut: "D C" },
+        { title: "Grid Yoğunluğu: Comfortable (Normal)", cmd: "density-comfortable", shortcut: "D N" },
+        { title: "Grid Yoğunluğu: Spacious (Geniş)", cmd: "density-spacious", shortcut: "D G" },
+        { title: "Açık Tema (Light Mode)", cmd: "theme-light", shortcut: "T L" },
+        { title: "Koyu Tema (Dark Mode)", cmd: "theme-dark", shortcut: "T D" },
+        { title: "Yeni Ürün Ekleme Panelini Aç", cmd: "open-form", shortcut: "N U" },
+        { title: "Tüm Seçimleri Temizle", cmd: "clear-select", shortcut: "C S" },
+        { title: "Hepsini Dışa Aktar (CSV)", cmd: "export-csv", shortcut: "E X" },
+        { title: "Filtre: Tüm Ürünleri Göster", cmd: "filter-all", shortcut: "F A" },
+        { title: "Filtre: Stok Kritik Olanları Göster", cmd: "filter-crit", shortcut: "F C" }
+      ];
+
+      let selectedCmdIndex = 0;
+
+      // Render the table rows
+      function renderTable() {
+        tbody.innerHTML = '';
+        
+        if (displayProducts.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="hrp-td" style="text-align:center; color:var(--text-muted); padding:30px;">Gösterilecek kayıt bulunamadı.</td></tr>`;
+          return;
+        }
+
+        displayProducts.forEach(prod => {
+          const isSelected = selectedIds.has(prod.id);
+          const tr = document.createElement('tr');
+          tr.className = `hrp-tr ${isSelected ? 'selected' : ''}`;
+          tr.id = `row-${prod.id}`;
+
+          // Status Badge styling
+          let statusBadge = `<span class="hrp-badge hrp-badge-success">Aktif</span>`;
+          if (prod.status === 'Kritik') {
+            statusBadge = `<span class="hrp-badge hrp-badge-warning">Kritik (${prod.stock})</span>`;
+          } else if (prod.status === 'Pasif') {
+            statusBadge = `<span class="hrp-badge hrp-badge-error">Pasif</span>`;
+          }
+
+          tr.innerHTML = `
+            <td class="hrp-td" style="text-align: center;">
+              <input type="checkbox" class="hrp-checkbox row-select" data-id="${prod.id}" ${isSelected ? 'checked' : ''} />
+            </td>
+            <td class="hrp-td number" style="font-weight:600; color:var(--accent);">${prod.id}</td>
+            <td class="hrp-td hrp-editable-cell" data-id="${prod.id}" data-field="name">${prod.name}</td>
+            <td class="hrp-td hrp-editable-cell" data-id="${prod.id}" data-field="category">${prod.category}</td>
+            <td class="hrp-td number hrp-editable-cell" data-id="${prod.id}" data-field="price">${prod.price.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2})} TRY</td>
+            <td class="hrp-td number hrp-editable-cell" data-id="${prod.id}" data-field="stock">${prod.stock}</td>
+            <td class="hrp-td">${statusBadge}</td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+
+        // Add checkbox listener
+        tbody.querySelectorAll('.row-select').forEach(chk => {
+          chk.addEventListener('change', (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (e.target.checked) {
+              selectedIds.add(id);
+              document.getElementById(`row-${id}`).classList.add('selected');
+            } else {
+              selectedIds.delete(id);
+              document.getElementById(`row-${id}`).classList.remove('selected');
+            }
+            updateBulkBar();
+          });
+        });
+
+        // Add inline-edit double click listeners
+        tbody.querySelectorAll('.hrp-editable-cell').forEach(cell => {
+          cell.addEventListener('dblclick', (e) => {
+            const id = cell.getAttribute('data-id');
+            const field = cell.getAttribute('data-field');
+            startInlineEdit(cell, id, field);
+          });
+        });
+
+        updateSelectAllCheckbox();
+      }
+
+      // Inline Editing Activation
+      function startInlineEdit(cell, id, field) {
+        if (cell.querySelector('input')) return; // already editing
+
+        const product = products.find(p => p.id === id);
+        const originalVal = product[field];
+        
+        cell.innerText = '';
+        const input = document.createElement('input');
+        input.className = 'hrp-inline-edit-input';
+        
+        if (field === 'price' || field === 'stock') {
+          input.type = 'number';
+          input.step = field === 'price' ? '0.01' : '1';
+          input.value = originalVal;
+        } else {
+          input.type = 'text';
+          input.value = originalVal;
+        }
+
+        cell.appendChild(input);
+        input.focus();
+
+        let finished = false;
+
+        function finishEdit(save) {
+          if (finished) return;
+          finished = true;
+
+          if (save) {
+            let newVal = input.value.trim();
+            if (field === 'price') {
+              newVal = parseFloat(newVal) || 0;
+              if (newVal < 0) newVal = 0;
+            } else if (field === 'stock') {
+              newVal = parseInt(newVal) || 0;
+              if (newVal < 0) newVal = 0;
+            }
+            
+            // OPTIMISTIC UI: Save immediately in state and render, notify via telemetry
+            product[field] = newVal;
+            
+            // Adjust status automatically if stock changes
+            if (field === 'stock') {
+              if (product.stock === 0) product.status = 'Pasif';
+              else if (product.stock < 20) product.status = 'Kritik';
+              else product.status = 'Aktif';
+            }
+
+            // Sync display array
+            const dispIdx = displayProducts.findIndex(p => p.id === id);
+            if (dispIdx !== -1) displayProducts[dispIdx] = { ...product };
+
+            triggerOptimisticIndicator();
+            filterProducts(); // refresh with active filters
+          } else {
+            // Cancel, restore original
+            if (field === 'price') {
+              cell.innerText = `${originalVal.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2})} TRY`;
+            } else {
+              cell.innerText = originalVal;
+            }
+          }
+        }
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') finishEdit(true);
+          if (e.key === 'Escape') finishEdit(false);
+        });
+
+        input.addEventListener('blur', () => {
+          finishEdit(true); // save on focus loss
+        });
+      }
+
+      // Visual indicator for Optimistic UI execution speed
+      function triggerOptimisticIndicator() {
+        const badge = document.querySelector('.hrp-perf-badge');
+        badge.innerText = '✓ 2ms';
+        badge.style.backgroundColor = 'rgba(46, 125, 50, 0.25)';
+        badge.style.color = '#2e7d32';
+        
+        setTimeout(() => {
+          badge.innerText = '⚡ 3ms';
+          badge.style.backgroundColor = 'var(--color-success-bg)';
+          badge.style.color = 'var(--color-success)';
+        }, 1500);
+      }
+
+      // Spacing / Density Switcher logic
+      window.setDensity = function(density) {
+        document.querySelectorAll('.hrp-density-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`density-${density}`).classList.add('active');
+
+        const root = document.documentElement;
+        if (density === 'compact') {
+          root.style.setProperty('--row-padding-y', '4px');
+          root.style.setProperty('--header-padding-y', '6px');
+          root.style.setProperty('--cell-fs', '11px');
+        } else if (density === 'comfortable') {
+          root.style.setProperty('--row-padding-y', '10px');
+          root.style.setProperty('--header-padding-y', '12px');
+          root.style.setProperty('--cell-fs', '13px');
+        } else if (density === 'spacious') {
+          root.style.setProperty('--row-padding-y', '16px');
+          root.style.setProperty('--header-padding-y', '16px');
+          root.style.setProperty('--cell-fs', '14px');
+        }
+        triggerOptimisticIndicator();
+      };
+
+      // Tab Filtering
+      window.filterTab = function(tabName) {
+        activeTab = tabName;
+        document.querySelectorAll('.hrp-tab').forEach(tab => tab.classList.remove('active'));
+        
+        if (tabName === 'all') document.getElementById('tab-all').classList.add('active');
+        if (tabName === 'critical') document.getElementById('tab-critical').classList.add('active');
+        if (tabName === 'service') document.getElementById('tab-services').classList.add('active');
+        if (tabName === 'inactive') document.getElementById('tab-inactive').classList.add('active');
+
+        filterProducts();
+      };
+
+      function filterProducts() {
+        if (activeTab === 'all') {
+          displayProducts = [...products];
+        } else if (activeTab === 'critical') {
+          displayProducts = products.filter(p => p.stock < 20 && p.status !== 'Pasif');
+        } else if (activeTab === 'service') {
+          displayProducts = products.filter(p => p.category === 'Hizmet');
+        } else if (activeTab === 'inactive') {
+          displayProducts = products.filter(p => p.status === 'Pasif');
+        }
+        applySort();
+        renderTable();
+      }
+
+      // Sorting logic
+      window.sortTable = function(key) {
+        if (sortKey === key) {
+          sortAsc = !sortAsc;
+        } else {
+          sortKey = key;
+          sortAsc = true;
+        }
+        filterProducts();
+      };
+
+      function applySort() {
+        displayProducts.sort((a, b) => {
+          let valA = a[sortKey];
+          let valB = b[sortKey];
+          
+          if (typeof valA === 'string') {
+            return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+          } else {
+            return sortAsc ? valA - valB : valB - valA;
+          }
+        });
+      }
+
+      // Checkbox multi-select helpers
+      headerSelectAll.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        displayProducts.forEach(p => {
+          if (checked) {
+            selectedIds.add(p.id);
+          } else {
+            selectedIds.delete(p.id);
+          }
+        });
+        renderTable();
+        updateBulkBar();
+      });
+
+      function updateSelectAllCheckbox() {
+        if (displayProducts.length === 0) {
+          headerSelectAll.checked = false;
+          headerSelectAll.disabled = true;
+          return;
+        }
+        headerSelectAll.disabled = false;
+        
+        let allSelected = true;
+        displayProducts.forEach(p => {
+          if (!selectedIds.has(p.id)) allSelected = false;
+        });
+        headerSelectAll.checked = allSelected;
+      }
+
+      function updateBulkBar() {
+        if (selectedIds.size > 0) {
+          bulkBar.classList.add('active');
+          bulkCountText.innerText = `[${selectedIds.size}] Satır Seçildi`;
+        } else {
+          bulkBar.classList.remove('active');
+        }
+      }
+
+      window.clearSelection = function() {
+        selectedIds.clear();
+        renderTable();
+        updateBulkBar();
+      };
+
+      // Bulk actions handler
+      window.bulkAction = function(actionType) {
+        products.forEach(p => {
+          if (selectedIds.has(p.id)) {
+            if (actionType === 'deactivate') {
+              p.status = 'Pasif';
+            } else if (actionType === 'activate') {
+              p.status = (p.stock < 20) ? 'Kritik' : 'Aktif';
+            } else if (actionType === 'delete') {
+              products = products.filter(prod => prod.id !== p.id);
+            }
+          }
+        });
+        selectedIds.clear();
+        triggerOptimisticIndicator();
+        filterProducts();
+        updateBulkBar();
+      };
+
+      // Theme toggle (Dark / Light)
+      const themeBtn = document.getElementById('theme-toggle-btn');
+      themeBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', nextTheme);
+        themeBtn.innerText = nextTheme === 'dark' ? '🌙' : '☀️';
+      });
+
+      // Accent color handler
+      window.setAccent = function(color) {
+        document.documentElement.style.setProperty('--accent', color);
+        document.documentElement.style.setProperty('--accent-light', color.replace('66%)', '66%, 0.15)'));
+      };
+
+      // Progressive disclosure panel logic
+      const discHeader = document.getElementById('disclosure-header');
+      const discBody = document.getElementById('disclosure-body');
+      const discArrow = document.getElementById('disclosure-arrow');
+      discHeader.addEventListener('click', () => {
+        discBody.classList.toggle('active');
+        discArrow.innerText = discBody.classList.contains('active') ? '▲' : '▼';
+      });
+
+      // Side Form Drawer trigger logic
+      btnToggleForm.addEventListener('click', () => {
+        formDrawer.classList.toggle('active');
+      });
+
+      btnCloseForm.addEventListener('click', () => {
+        formDrawer.classList.remove('active');
+      });
+
+      document.getElementById('btn-form-cancel').addEventListener('click', () => {
+        document.getElementById('new-product-form').reset();
+        clearValidationErrors();
+      });
+
+      // Sakin Inline Validation (turuncu, stressiz doğrulama)
+      window.validateField = function(input) {
+        const id = input.id;
+        const val = parseFloat(input.value);
+        const errorEl = document.getElementById(`validation-${id.split('-')[1]}`);
+
+        if (id === 'form-price') {
+          if (val <= 0 || isNaN(val)) {
+            input.classList.add('warning');
+            errorEl.innerText = "Fiyat sıfırdan büyük olmalıdır. (Sessiz uyarı)";
+            errorEl.style.display = 'block';
+            return false;
+          }
+        } else if (id === 'form-stock') {
+          if (val < 0 || isNaN(val)) {
+            input.classList.add('warning');
+            errorEl.innerText = "Stok miktarı negatif olamaz.";
+            errorEl.style.display = 'block';
+            return false;
+          }
+        }
+
+        input.classList.remove('warning');
+        errorEl.style.display = 'none';
+        return true;
+      };
+
+      function clearValidationErrors() {
+        document.querySelectorAll('.hrp-input').forEach(input => input.classList.remove('warning'));
+        document.querySelectorAll('.hrp-validation-msg').forEach(el => el.style.display = 'none');
+      }
+
+      // Handle Form Submit (Add Product)
+      window.handleFormSubmit = function(e) {
+        e.preventDefault();
+        
+        const nameInput = document.getElementById('form-name');
+        const priceInput = document.getElementById('form-price');
+        const stockInput = document.getElementById('form-stock');
+
+        // Final validation
+        if (!validateField(priceInput) || !validateField(stockInput)) {
+          return;
+        }
+
+        const name = nameInput.value.trim();
+        const category = document.getElementById('form-category').value;
+        const price = parseFloat(priceInput.value);
+        const stock = parseInt(stockInput.value);
+        
+        // Auto-ID generator
+        const nextId = "LRP-" + (1000 + products.length + 1);
+
+        let status = "Aktif";
+        if (stock === 0) status = "Pasif";
+        else if (stock < 20) status = "Kritik";
+
+        const newProd = { id: nextId, name, category, price, stock, status };
+
+        // OPTIMISTIC UI: push directly
+        products.push(newProd);
+        
+        document.getElementById('new-product-form').reset();
+        clearValidationErrors();
+        formDrawer.classList.remove('active');
+
+        // Show autosave feedback
+        const feedback = document.getElementById('form-autosave-status');
+        feedback.innerText = "Yeni kayıt LRP veritabanına aktarıldı.";
+        feedback.style.color = "var(--color-success)";
+        setTimeout(() => {
+          feedback.innerText = "Değişiklikler otomatik kaydedilir.";
+          feedback.style.color = "var(--text-muted)";
+        }, 3000);
+
+        triggerOptimisticIndicator();
+        filterProducts();
+      };
+
+      // Export dummy CSV
+      window.exportData = function() {
+        let csv = "ID,Adı,Kategori,Fiyat,Stok,Durum\n";
+        products.forEach(p => {
+          csv += `${p.id},"${p.name}",${p.category},${p.price},${p.stock},${p.status}\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hrp_urun_listesi.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      // Change nav active item
+      window.changeMenu = function(item) {
+        document.querySelectorAll('.hrp-nav-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+      };
+
+      // COMMAND PALETTE ENGINE (Ctrl+K)
+      document.getElementById('global-search-trigger').addEventListener('click', () => {
+        openCommandPalette();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        // Toggle Cmd+K or Ctrl+K
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          e.preventDefault();
+          openCommandPalette();
+        }
+        
+        // Escape to close
+        if (e.key === 'Escape') {
+          closeCommandPalette();
+        }
+
+        // Arrow keys inside command palette
+        if (overlayCmd.style.display === 'grid') {
+          const items = listCmdResults.querySelectorAll('.hrp-cmd-item');
+          if (items.length === 0) return;
+
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            items[selectedCmdIndex].classList.remove('active');
+            selectedCmdIndex = (selectedCmdIndex + 1) % items.length;
+            items[selectedCmdIndex].classList.add('active');
+            items[selectedCmdIndex].scrollIntoView({ block: 'nearest' });
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            items[selectedCmdIndex].classList.remove('active');
+            selectedCmdIndex = (selectedCmdIndex - 1 + items.length) % items.length;
+            items[selectedCmdIndex].classList.add('active');
+            items[selectedCmdIndex].scrollIntoView({ block: 'nearest' });
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            items[selectedCmdIndex].click();
+          }
+        }
+      });
+
+      function openCommandPalette() {
+        overlayCmd.style.display = 'grid';
+        inputCmdSearch.value = '';
+        selectedCmdIndex = 0;
+        filterCommands();
+        setTimeout(() => inputCmdSearch.focus(), 50);
+      }
+
+      function closeCommandPalette() {
+        overlayCmd.style.display = 'none';
+      }
+
+      overlayCmd.addEventListener('click', (e) => {
+        if (e.target === overlayCmd) closeCommandPalette();
+      });
+
+      inputCmdSearch.addEventListener('input', () => {
+        selectedCmdIndex = 0;
+        filterCommands();
+      });
+
+      function filterCommands() {
+        const query = inputCmdSearch.value.trim().toLowerCase();
+        listCmdResults.innerHTML = '';
+
+        const filtered = commandOptions.filter(opt => 
+          opt.title.toLowerCase().includes(query) || 
+          opt.cmd.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+          listCmdResults.innerHTML = `<div style="padding:12px; text-align:center; color:var(--text-muted);">Sonuç bulunamadı.</div>`;
+          return;
+        }
+
+        filtered.forEach((opt, idx) => {
+          const div = document.createElement('div');
+          div.className = `hrp-cmd-item ${idx === 0 ? 'active' : ''}`;
+          div.innerHTML = `
+            <div class="hrp-cmd-item-left">
+              <span>⚡</span>
+              <span>${opt.title}</span>
+            </div>
+            <span class="hrp-cmd-item-shortcut">${opt.shortcut}</span>
+          `;
+
+          div.addEventListener('click', () => {
+            executeCommand(opt.cmd);
+            closeCommandPalette();
+          });
+
+          listCmdResults.appendChild(div);
+        });
+      }
+
+      function executeCommand(cmd) {
+        if (cmd === 'density-compact') setDensity('compact');
+        else if (cmd === 'density-comfortable') setDensity('comfortable');
+        else if (cmd === 'density-spacious') setDensity('spacious');
+        else if (cmd === 'theme-light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.getElementById('theme-toggle-btn').innerText = '☀️';
+        }
+        else if (cmd === 'theme-dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.getElementById('theme-toggle-btn').innerText = '🌙';
+        }
+        else if (cmd === 'open-form') {
+          formDrawer.classList.add('active');
+        }
+        else if (cmd === 'clear-select') {
+          clearSelection();
+        }
+        else if (cmd === 'export-csv') {
+          exportData();
+        }
+        else if (cmd === 'filter-all') {
+          filterTab('all');
+        }
+        else if (cmd === 'filter-crit') {
+          filterTab('critical');
+        }
+      }
+
+      // Initial execution
+      filterProducts();
+    </script>
+  </body>
+</html>

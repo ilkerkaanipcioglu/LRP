@@ -84,6 +84,8 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 
 12. **Kapsam Disiplini**: "En iyi çekirdek" hedefi planlama girdisi olarak kullanılmaz — sonsuz kapsam üretir. Her ek, gerçek bir acı noktasından türetilir, varsayımdan değil.
 
+13. **LesTupid Mikro Uygulama Uyumluğu**: LesTupid altındaki dikey "aptalca olmayan" (non-stupid) uygulamalar (`les_wait`, `les_certification`, `Les_Commerce` vb.) standalone (bağımsız) veya LRP entegre çalışabilir. Entegre modda LRP çekirdek API/Ledger/ReBAC şemasını kullanmaları zorunludur.
+
 ---
 
 ## Uygulama Sırası (v2 Protokol)
@@ -101,6 +103,7 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 | 9 | Embedding/semantic katman | Agent retrieval ihtiyacı somutlaşınca | 🔲 Planned |
 | 10 | Performans katmanı (Rust/NIF) | Yalnızca "Elixir burada yetersiz" ölçümle kanıtlandıktan sonra | 🔲 Phase 3 |
 | 11 | Web3/dış sistemler | Connector kontratı üzerinden, çekirdeğe dokunmadan, talep geldikçe | 🔲 On demand |
+| 12 | Üretici Finansmanı | `LRP.Creator` (Profil/Güven Skoru) ve `LRP.Funding` (Token/Ledger Payout) | ✅ Done (v0.2.0) |
 
 ---
 
@@ -136,6 +139,8 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 | 19 | `LRP.Journal` | `journals` | Yevmiye fişleri |
 | 20 | `LRP.JournalLine` | `journal_lines` | Yevmiye satırları |
 | 21 | `LRP.FiscalPeriod` | `fiscal_periods` | Mali dönem kilitleri |
+| 22 | `LRP.Company` | `companies` | Şirket gruplama katmanı |
+| 23 | `LRP.Project` | `projects` | Veritabanı havuzu ve proje sınırları |
 
 ### Planlanan Tablolar (Gerçek İhtiyaç Doğunca Eklenir)
 
@@ -155,6 +160,7 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 | [`test/`](test/AGENTS.md) | ✅ | Entegrasyon ve birim testleri |
 | [`config/`](config/AGENTS.md) | ✅ | Runtime ve veritabanı konfigürasyonu |
 | [`priv/`](priv/AGENTS.md) | ✅ | Veritabanı migration'ları |
+| [`LRP_Demo_UI/`](LRP_Demo_UI/AGENTS.md) | ✅ | Ön yüz tasarım şablonları (SAP GUI, Fiori, HRP vb.) ve space-agent entegrasyonu |
 
 ---
 
@@ -166,6 +172,7 @@ Her ajan ve geliştirici bu sözleşmeleri zorunlu olarak uygular:
 ### Sistem Yönetim Tasks (CLI)
 - `mix lrp.status [--json]` - LRP sistem özetini (tablo kayıt sayılarını) raporlar.
 - `mix lrp.demo` - Canlı fatura onay iş akışı demosunu çalıştırır.
+- `mix lrp.console` - Onboarding sihirbazı (Şirket/Proje kurulum) simülasyonu çalıştırır.
 - `mix lrp.seed` - Idempotent demo veri seti yükler.
 - `mix lrp.tenant list | create --name <ad> [--json]` - Tenant yönetimi.
 - `mix lrp.object list --tenant <id> [--type X] | get --id <id> [--json]` - Nesne sorguları.

@@ -183,6 +183,9 @@ mix lrp.status --json
 # Uçtan uca canlı demo (5 dk — yatırımcı/müşteri için)
 mix lrp.demo
 
+# Console Kurulum Sihirbazı Demosu (Şirket/Proje)
+mix lrp.console
+
 # Tenant yönetimi
 mix lrp.tenant list
 mix lrp.tenant create --name "Şirket Adı"
@@ -236,7 +239,8 @@ The integration tests cover:
 | v0.1 | Entity Engine (9 core tables + tests) | ✅ Done |
 | v0.2 | Workflow Engine (state machines, process tasks) | ✅ Done |
 | v0.3 | Ledger (VUK + IFRS Ecto + migrations, posting rules) | ✅ Done |
-| v0.4 | AI Router + Classifier | 🔲 Planned |
-| v0.5 | Agent Framework (governance_core integration) | 🔲 Planned |
-| v0.6 | Plugin SDK (Registry + validator + LocalStorage plugin) | ✅ Done |
+| v0.4 | Creator Engine & Community Funding (LRP.Creator, LRP.Funding, automated double-entry revenue sharing) | 🚧 In Progress |
+| v0.5 | AI Router + Classifier | 🔲 Planned |
+| v0.6 | Agent Framework (governance_core integration) | 🔲 Planned |
+| v0.7 | Plugin SDK (Registry + validator + LocalStorage plugin) | ✅ Done |
 | v1.0 | Production Ready (GİB e-defter, SPK) | 🔲 Planned |

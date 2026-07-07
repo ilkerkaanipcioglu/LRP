@@ -21,6 +21,8 @@ Bu dizin LRP'nin **çekirdek motorudur**: tüm Ecto şemaları, public API yüze
 | `repo.ex` | `LRP.Repo` | Ecto.Repo (SQLite3 dev, PostgreSQL prod) |
 | `inbox.ex` | `LRP.Inbox` | Broadway tabanlı async event inbox pipeline |
 | `source_connector.ex` | `LRP.SourceConnector` | GitHub repo analizi → LRP Object Graph import (ADR-0007 kontratına uyarlanacak) |
+| `creator.ex` | `LRP.Creator` | Üretici profil yönetimi, platform bağlantıları ve Güven Skoru hesaplama |
+| `funding.ex` | `LRP.Funding` | Proje token fonlaması, yatırımlar ve çift taraflı hasılat payı dağıtımı |
 
 ---
 

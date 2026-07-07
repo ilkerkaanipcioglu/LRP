@@ -16,12 +16,13 @@ defmodule LRP.Tenant do
   schema "tenants" do
     field :name, :string
     field :status, :string, default: "active"
+    field :project_id, :binary_id
     timestamps()
   end
 
   def changeset(tenant, attrs) do
     tenant
-    |> cast(attrs, [:name, :status])
+    |> cast(attrs, [:name, :status, :project_id])
     |> validate_required([:name])
   end
 end
